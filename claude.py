@@ -27,10 +27,12 @@ def _build_gf():
 
 _build_gf()
 
-# def gf_mul(a, b):
-    # if a == 0 or b == 0:
-        # return 0
-    # return GF_EXP[GF_LOG[a] + GF_LOG[b]]
+
+def gf_mul(a, b):
+    if a == 0 or b == 0:
+        return 0
+    return GF_EXP[GF_LOG[a] + GF_LOG[b]]
+
 
 # def gf_poly_mul(p, q):
     # r = [0] * (len(p) + len(q) - 1)
@@ -71,6 +73,16 @@ def rs_encode(data, n_ec=20):
         coef = msg[i]
         for j, g in enumerate(RS_GEN_20):
             msg[i + j] ^= gf_mul(coef, g)
+    return msg[len(data):]
+	
+
+def get_ecc_bytes(data, n_ecc=20):
+    ecc = [*data, *([0] * n_ecc)]
+    for i, b in enumerate(data):
+        if b == 0:
+            continue
+        for j, g in enumerate(RS_GEN_20):
+            msg[i + j] ^= gf_mul(b, g)
     return msg[len(data):]
 
 
