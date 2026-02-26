@@ -1,0 +1,255 @@
+prgm:QR4
+" V4-L Alphanumeric QR Code Generator
+" Uses 2px/module; output is 66x66px (fits 96-wide screen)
+" Max 47 alphanumeric chars
+
+"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:"→Str2
+
+ClrList L1,L2,L3
+
+Disp "ALPHANUMERIC"
+Disp "MAX 47 CHARS"
+Input ">",Str1
+length(Str1)→N
+
+If N>47:Then
+	Disp "TOO LONG"
+	Stop
+End
+
+" ---- Encode to bit array L1 ----
+" Bit array: L1(i)=0 or 1
+
+" Mode 0010
+{0,0,1,0}→L1
+5→BI  " next bit position
+
+" 9-bit character count
+N→Z
+For(I,BI+8,BI,-1)
+	fPart(Z/2)→L1(I)
+	iPart(Z/2)→Z
+End
+BI+9→BI
+
+" Pairs (11 bits each)
+For(P,1,iPart(N/2)
+	inString(Str2,sub(Str1,2P-1,1))-1→A
+	inString(Str2,sub(Str1,2P,1))-1→B
+	45A+B→V
+	For(I,BI+10,BI,-1)
+		fPart(V/2)→L1(I)
+		iPart(V/2)→V
+	End
+	BI+11→BI
+End
+
+" Remaining char (6 bits)
+If fPart(N/2)
+Then
+	inString(Str2,sub(Str1,N,1))-1→V
+	For(I,BI+5,BI,-1)
+	fPart(V/2)→L1(I)
+	iPart(V/2)→V
+	End
+	BI+6→BI
+End
+
+" Terminator
+For(I,BI,BI+3)
+	0→L1(I)
+End
+BI+4→BI
+
+" Bit-pad to byte boundary
+While fPart((BI-1)/8)
+	0→L1(BI)
+	BI+1→BI
+End
+
+" Byte-pad to 80 codewords with 236/17 alternating
+0→PF
+While (BI-1)/8<80
+	If PF=0
+	Then
+		{1,1,1,0,1,1,0,0}→L3
+	Else
+		{0,0,0,1,0,0,0,1}→L3
+	End
+	For(B,1,8)
+	L3(B)→L1(BI)
+	BI+1→BI
+	End
+	1-PF→PF
+End
+
+" Pack to bytes → L2(1..80)
+0→dim(L2)
+For(I,1,80)
+	0→Z
+	For(J,0,7)
+	L1((I-1)*8+J+1)+2Z→Z
+	End
+	Z→L2(I)
+End
+
+ClrList L1,L3
+
+
+prgm:Q4ECC
+" Now L1(1..96) has data+ECC bytes
+
+" ---- DRAW ----
+ClrDraw
+FnOff
+AxesOff
+
+" === FINDER PATTERNS ===
+For(F,0,2)
+	If F=0
+	Then
+	0→FR
+	0→FC
+	End
+	If F=1:Then:0→FR:26→FC:End
+	If F=2:Then:26→FR:0→FC:End
+	For(Y,0,6)
+	For(X,0,6)
+	(Y=0 or Y=6 or X=0 or X=6 or (Y≥2 and Y≤4 and X≥2 and X≤4))→Z
+	If Z:For(U,0,1):For(V,0,1)
+	Pxl-On((FR+Y)*2+V,(FC+X)*2+U)
+	End:End:End
+	End
+	End
+End
+
+" === ALIGNMENT PATTERN (center 26,26) ===
+For(Y,24,28)
+	For(X,24,28)
+	(Y=24 or Y=28 or X=24 or X=28 or (Y=26 and X=26))→Z
+	If Z:For(U,0,1):For(V,0,1)
+	Pxl-On(Y*2+V,X*2+U)
+	End:End:End
+	End
+End
+
+" === TIMING PATTERNS (row 6 and col 6, modules 8..24) ===
+For(I,8,24)
+	If fPart(I/2)=0:Then
+	For(U,0,1):For(V,0,1)
+	Pxl-On(12+V,I*2+U)
+	Pxl-On(I*2+V,12+U)
+	End:End)
+	End
+End
+
+" === DARK MODULE at (4v+9,8)=(25,8) ===
+For(U,0,1):For(V,0,1)
+	Pxl-On(50+V,16+U)
+End:End
+
+" === FORMAT INFO (ECC L, mask 0) ===
+" 15 bits: 111011111000100
+{1,1,1,0,1,1,1,1,1,0,0,0,1,0,0}→L3
+
+" Around top-left: row 8 (cols 0-5,7,8) then col 8 (rows 7,5,4,3,2,1,0)
+" Bits 1-8 → row 8 left; bits 9-15 → col 8 upward
+1→BI
+For(C,0,8)
+	If C≠6:Then
+	If L3(BI):For(U,0,1):For(V,0,1)
+	Pxl-On(16+V,C*2+U)
+	End:End:End
+	BI+1→BI
+	End
+End
+For(R,7,0,-1)
+	If R≠6:Then
+	If BI≤15 and L3(BI):For(U,0,1):For(V,0,1)
+	Pxl-On(R*2+V,16+U)
+	End:End:End
+	BI+1→BI
+	End
+End
+
+" Top-right copy: bits 1-7 → row 8, cols 32 down to 26
+1→BI
+For(C,32,26,-1)
+	If L3(BI):For(U,0,1):For(V,0,1)
+	Pxl-On(16+V,C*2+U)
+	End:End:End
+	BI+1→BI
+End
+
+" Bottom-left copy: bits 8-15 → col 8, rows 32 down to 26 (dark module at 32,8 is bit 8)
+For(R,32,26,-1)
+	If L3(BI):For(U,0,1):For(V,0,1)
+	Pxl-On(R*2+V,16+U)
+	End:End:End
+	BI+1→BI
+End
+ClrList L3
+
+" === DATA PLACEMENT ===
+" Convert 96 bytes → 768 bits in L2
+0→dim(L2)
+For(I,1,96)
+	For(J,7,0,-1)
+	fPart(iPart(L1(I)/2^J)/2)→L2((I-1)*8+(7-J)+1)
+	End
+End
+ClrList L1
+
+" Zigzag walker: column pairs from right, alternating up/down
+" Skip col 6 (timing)
+0→BI   " bits placed
+32→X   " start at rightmost col
+-1→DV  " direction: -1=up, 1=down
+32→Y   " start row (going up, so start at bottom)
+0→XS   " 0=right col of pair, 1=left col of pair
+
+Lbl WLK
+" Determine actual column (skip col 6)
+X→XA
+If XS:XA-1→XA
+
+" Check reserved
+(Y≤8 and XA≤8)→R
+R or (Y≤8 and XA≥24)→R
+R or (Y≥24 and XA≤8)→R
+R or Y=6→R
+R or XA=6→R
+R or (Y≥24 and Y≤28 and XA≥24 and XA≤28)→R
+R or (Y=8 and (XA≤8 or XA≥24))→R
+R or (XA=8 and (Y≤8 or Y≥24))→R
+R or (Y=25 and XA=8)→R
+
+If not(R):Then
+	BI+1→BI
+	If BI≤768:Then
+	L2(BI) xor (fPart((Y+XA)/2)=0)→BV
+	If BV:For(U,0,1):For(V,0,1)
+	Pxl-On(Y*2+V,XA*2+U)
+	End:End:End
+	End
+End
+
+" Advance position
+If XS=0:Then
+	1→XS
+Else
+	0→XS
+	Y+DV→Y
+	If Y<0 or Y>32:Then
+	-DV→DV
+	Y-DV→Y
+	Y-DV→Y
+	X-2→X
+	If X=6:X-1→X
+	If X<0:Goto END
+	End
+End
+Goto WLK
+Lbl END
+
+ClrList L1,L2
