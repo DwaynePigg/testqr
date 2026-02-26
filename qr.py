@@ -1,7 +1,11 @@
 import sys
 import string
-from itertools import batched, chain
+from itertools import batched, chain, repeat
 
+
+ALPHANUMERIC = string.digits + string.ascii_uppercase + ' $%*+-./:'
+
+FORMAT_L0 = 0b111011111000100
 
 def pxl_on(i, j, state=1):
 	if not (0 <= i < 33) or not (0 <= j < 33):
@@ -52,9 +56,32 @@ def put_timing(size=33):
 		pxl_on(6, j, 1 - j % 2)
 	for i in range(7, size - 7):
 		pxl_on(i, 6, 1 - i % 2)
+	pxl_on(size - 8, 8)
 
 
-ALPHANUMERIC = string.digits + string.ascii_uppercase + ' $%*+-./:'
+def put_format(bits=FORMAT_L0, size=33):
+	# bits = 0b111111111111111
+	for a in range(6):
+		pxl_on(a, 8, (FORMAT_L0 >> a) & 1)
+
+	pxl_on(7, 8, (FORMAT_L0 >> 6) & 1)
+	pxl_on(8, 8, (FORMAT_L0 >> 7) & 1)
+	pxl_on(8, 7, (FORMAT_L0 >> 8) & 1)
+
+	for a in range(6):
+		pxl_on(8, 5 - a, (FORMAT_L0 >> 9 + a) & 1)
+
+	for a in range(8):
+		pxl_on(8, size - 1 - a, (FORMAT_L0 >> a) & 1)
+
+	for a in range(7):
+		pxl_on(size - 7 + a, 8, (FORMAT_L0 >> 8 + a) & 1)
+
+
+
+def mask0(i, j):
+	return (i + j) % 2 == 0
+
 
 
 # _,X = 0,1
@@ -99,31 +126,12 @@ put_position(0, 0)
 put_position(0, 26)
 put_position(26, 0)
 put_alignment(24, 24)
-put_timing(33)
-
-FORMAT_L0 = 0b111011111000100
-
-for a in range(6):
-	pxl_on(8, a, (FORMAT_L0 >> (14 - a)) & 1)
-for a in range(6):
-	pxl_on(5 - a, 8, (FORMAT_L0 >> (5 - a)) & 1)
-
-pxl_on(8, 7, (FORMAT_L0 >> 8) & 1)
-pxl_on(8, 8, (FORMAT_L0 >> 7) & 1)
-pxl_on(7, 8, (FORMAT_L0 >> 6) & 1)
-
-for a in range(8):
-	pxl_on(8, 32 - a, (FORMAT_L0 >> a) & 1)
-for a in range(7):
-	pxl_on(26 + a, 8, (FORMAT_L0 >> a + 8) & 1)
+put_timing()
+put_format()
 
 
 def skip(i, j):
 	return i == 6 or abs(i - 26) <= 2 and abs(j - 26) <= 2
-
-
-def mask0(i, j):
-	return (i + j) % 2 == 0
 
 
 def iter_int_bits(n):
@@ -140,30 +148,30 @@ def iter_bits(message='HELLO WORLD!'):
 	yield from (0, 0, 0, 0)
 	for f in range(len(message_bytes), 78):
 		yield from iter_int_bits([0xEC, 0x11][f % 2])
-
-
-# P-Mint(P/M
-
-def get_codewords(message='HELLO WORLD!'):
-	length = len(message)
-	B = 64
 	
+	# TODO: ECC
+	for _ in range(20):
+		yield from (0, 0, 0, 0, 0, 0, 0, 0)
 	
-	
-	L1 = []
-	I = 4
-	for L in message:
-		pass
+	yield from (0, 0, 0, 0, 0, 0, 0)
 
+
+def top_row(j):
+	return 9 if j < 9 or j > 24 else 0
+
+
+def bottom_row(j):
+	return 24 if j < 9 else 32
 
 
 i = 32
 j = 32
 d = 1
 a = 0
-bits = iter_bits()
+bits = iter_bits('HELLO WORLD!HELLO WORLD!HELLO WORLD!HELLO WORLD!HELLO WORLD!HELLO WORLD!000000')
 
 try:
+	# sys.exit()
 	while True:
 		zig = j - (a % 2)
 		if not skip(i, zig):
@@ -177,16 +185,14 @@ try:
 		a += 1
 
 		if d == 1:
-			top_row = 9 if j < 9 or j > 24 else 0
-			if i < top_row:
+			if i < top_row(j):
 				d = -1
-				j -= (2 + (j == 6))
-				i = top_row
+				j -= (2 + (j == 8))
+				i = top_row(j)
 		else:
-			bottom_row = 24 if j < 9 else 32
-			if i > bottom_row:
+			if i > bottom_row(j):
 				d = 1
-				j -= (2 + (j == 6))
-				i = bottom_row
+				j -= (2 + (j == 8))
+				i = bottom_row(j)
 finally:
 	disp_graph()
