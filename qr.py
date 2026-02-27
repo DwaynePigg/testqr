@@ -4,15 +4,31 @@ import string
 from collections import deque
 from itertools import batched, chain, repeat
 
+import qrcode
+import segno
+from segno import encoder
 from qrcodegen import QrCode, QrSegment
 
 
-def verify(message):
+def verify_nayuki(message):
 	seg = QrSegment.make_bytes(message.encode('utf-8'))
 	qr = QrCode.encode_segments([seg], QrCode.Ecc.LOW, minversion=4, maxversion=4, mask=0, boostecl=False)
-	return tuple(
-		bytes(1 if qr.get_module(j, i) else 0 for j in range(33))
+	return tuple(bytes(1 if qr.get_module(j, i) else 0 for j in range(33))
     for i in range(33))
+
+
+def verify_qr(message):
+	qr = qrcode.QRCode(version=4, error_correction=qrcode.constants.ERROR_CORRECT_L, mask_pattern=0)
+	qr.add_data(message)
+	qr.make()
+	# qr.print_ascii(invert=True)
+	print(' '.join(f"{b:02X}" for b in qr.data_cache))
+	return tuple(bytearray(row) for row in qr.modules)
+
+
+def verify_segno(message):
+	qr = segno.make(message.encode('utf-8'), version=4, error='L', mask=0, mode='byte', boost_error=False)
+	return qr.matrix
 
 
 GF256_LOG = bytes([0,0,1,25,2,50,26,198,3,223,51,238,27,104,199,75,4,100,224,14,52,141,239,129,28,193,105,248,200,8,76,113,5,138,101,47,225,36,15,33,53,147,142,218,240,18,130,69,29,181,194,125,106,39,249,185,201,154,9,120,77,228,114,166,6,191,139,98,102,221,48,253,226,152,37,179,16,145,34,136,54,208,148,206,143,150,219,189,241,210,19,92,131,56,70,64,30,66,182,163,195,72,126,110,107,58,40,84,250,133,186,61,202,94,155,159,10,21,121,43,78,212,229,172,115,243,167,87,7,112,192,247,140,128,99,13,103,74,222,237,49,197,254,24,227,165,153,119,38,184,180,124,17,68,146,217,35,32,137,46,55,63,209,91,149,188,207,205,144,135,151,178,220,252,190,97,242,86,211,171,20,42,93,158,132,60,57,83,71,109,65,162,31,45,67,216,183,123,164,118,196,23,73,236,127,12,111,246,108,161,59,82,41,157,85,170,251,96,134,177,187,204,62,90,203,89,95,176,156,169,160,81,11,245,22,235,122,117,44,215,79,174,213,233,230,231,173,232,116,214,244,234,168,80,88,175])
@@ -106,6 +122,14 @@ def mask0(i, j):
 	return (i + j) % 2 == 0
 
 
+# for i in range(33):
+	# for j in range(33):
+		# pxl_on(i, j, abs(i - 26) <= 2 and abs(j - 26) <= 2 or abs(i - 8) <= 2 and abs(j - 26) <= 2 or abs(i - 26) <= 2 and abs(j - 8) <= 2)
+
+
+# disp_graph()
+# sys.exit()
+
 put_position(0, 0)
 put_position(0, 26)
 put_position(26, 0)
@@ -133,7 +157,7 @@ def get_ecc_bytes(data, n_ecc=20):
 			for i, coef in enumerate(RS_POLY_20_LOG):
 				ecc[i] ^= GF256_EXP[(coef + GF256_LOG[factor]) % 255]
 
-	return ecc
+	return bytes(ecc)
 
 
 def iter_bits(message='HELLO WORLD!'):
@@ -152,8 +176,7 @@ def iter_bits(message='HELLO WORLD!'):
 	for f in range(0, 78 - length):
 		buf.append([0xEC, 0x11][f % 2])
 
-	print(' '.join(f"{b:02X}" for b in buf))
-	print(' '.join(f"{b:02X}" for b in get_ecc_bytes(buf)))
+	print(' '.join(f"{b:02X}" for b in buf + get_ecc_bytes(buf)))
 	
 	for b in buf:
 		yield from iter_int_bits(b)
@@ -186,7 +209,7 @@ message = ' '.join(sys.argv[1:])
 
 bits = bytes(iter_bits(message))
 
-correct = verify(message)
+correct = verify_qr(message)
 bits_it = iter(bits)
 
 try:
@@ -214,9 +237,12 @@ try:
 				j -= (2 + (j == 8))
 				i = bottom_row(j)
 finally:
-	diff = [
-		[col1 ^ col2 for col1, col2 in zip(row1, row2)] 
-	for row1, row2 in zip(matrix, correct)]
-	
-	disp_graph(matrix)
-	print('Correct!' if matrix == correct else 'Incorrect!')
+	if matrix == correct:
+		disp_graph()
+		print('Correct!')
+	else:
+		diff = [
+			[col1 ^ col2 for col1, col2 in zip(row1, row2)] 
+		for row1, row2 in zip(matrix, correct)]
+		disp_graph(diff)
+		print('Incorrect! Diff displayed.')
