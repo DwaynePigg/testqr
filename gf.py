@@ -69,7 +69,7 @@ for i in range(255, 512):
 def gf_mul(a, b):
 	if a == 0 or b == 0:
 		return 0
-	return EXP[LOG[a] + LOG[b]]
+	return EXP_TABLE[(LOG_TABLE[a] + LOG_TABLE[b]) % 255]
 
 
 
@@ -87,6 +87,20 @@ def compute_ecc(data):
 				ecc[i] ^= gf_mul(RS_GEN_7[i], factor)
 
 	return ecc
+
+
+
+def rs_divisor(degree):
+	result = bytearray([0] * (degree - 1) + [1])
+	root = 1
+	for _ in range(degree):
+		for j in range(degree):
+			result[j] = gf_mul(result[j], root)
+			if j + 1 < degree:
+				result[j] ^= result[j + 1]
+		root = gf_mul(root, 0x02)
+
+	return result
 
 
 
@@ -110,3 +124,7 @@ print(' '.join(f"{b:02X}" for b in buf))
 print(' '.join(f"{b:02X}" for b in get_ecc_bytes(buf)))
 print(' '.join(f"{b:02X}" for b in compute_ecc(buf)))
 
+print([
+	list(rs_divisor(e))
+	for e in [7, 10, 15, 20, 26, 36, 40, 48, 60, 72, 80]
+])
