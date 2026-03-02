@@ -1,6 +1,8 @@
 PRGM:QRECC
 
-seq(0,theta,1,20)->L2
+# extend L1 and use offsets
+augment(L1,seq(0,R,1,20->L1
+seq(0,R,1,20)->L2
 For(R,1,dim(L1
 	L1(R->B
 	1+RfPart(R/N->O
@@ -19,6 +21,7 @@ For(R,1,dim(L1
 			X->L2(E
 		End
 	End
+End
 
 
 

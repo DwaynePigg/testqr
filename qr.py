@@ -10,8 +10,13 @@ from qrcodegen import QrCode, QrSegment
 def verify_nayuki(message):
 	seg = QrSegment.make_bytes(message.encode('utf-8'))
 	qr = QrCode.encode_segments([seg], QrCode.Ecc.LOW, minversion=4, maxversion=4, mask=0, boostecl=False)
-	return tuple(bytes(1 if qr.get_module(j, i) else 0 for j in range(33))
-    for i in range(33))
+	return tuple(bytes(1 if qr.get_module(j, i) else 0 for j in range(33)) for i in range(33))
+
+
+def verify_nayuki_alphanumeric(message):
+	seg = QrSegment.make_alphanumeric(message)
+	qr = QrCode.encode_segments([seg], QrCode.Ecc.LOW, minversion=4, maxversion=4, mask=0, boostecl=False)
+	return tuple(bytes(1 if qr.get_module(j, i) else 0 for j in range(33)) for i in range(33))
 
 
 
@@ -26,6 +31,7 @@ RS_POLY_7 = bytes([127, 122, 154, 164, 11, 68, 117])
 
 
 ALPHANUMERIC = string.digits + string.ascii_uppercase + ' $%*+-./:'
+AN_TABLE = { a: i for i, a in enumerate(ALPHANUMERIC) }
 
 FORMAT_L0 = 0b111011111000100
 
@@ -161,7 +167,7 @@ def get_ecc_bytes0(data, n_ecc=20):
 	return bytes(ecc)
 
 
-def iter_bits(message='HELLO WORLD!'):
+def iter_bits(message):
 	message_bytes = message.encode('utf-8')
 	buf = bytearray([0x4 << 4])
 	
@@ -183,27 +189,69 @@ def iter_bits(message='HELLO WORLD!'):
 		yield from iter_int_bits(e)
 
 	yield from (0, 0, 0, 0, 0, 0, 0)
-	
 
-def get_bytes(message='HELLO WORLD!'):
-	message_bytes = message.encode('utf-8')
-	buf = bytearray([0x4 << 4])
-	
-	def pack_half(b):
-		buf[-1] |= b >> 4
-		buf.append((b & 0xF) << 4)
 
-	length = len(message_bytes)
-	pack_half(length)
-	for m in message_bytes:
-		pack_half(m)
+class BitBuffer:
+
+	def __init__(self):
+		self.buffer = bytearray()
+		self.bit_length = 0
+
+	def put(self, n, size=8):
+		power = 2 ** (size - 1)
+		while power >= 1:
+			bit = n >= power
+			if self.bit_length % 8 == 0:
+				self.buffer.append(0)
+			if bit:
+				self.buffer[-1] += 2 ** (7 - self.bit_length % 8)
+			self.bit_length += 1
+			n -= bit * power
+			power /= 2
+
+	def put(self, n, size=8):
+		for i in range(size - 1, -1, -1):
+			bit = int(n / (2 ** i)) % 2
+			# bit2 = int(2 * ((int(n / (2 ** i)) / 2) % 1))
+			if self.bit_length % 8 == 0:
+				self.buffer.append(0)
+			if bit:
+				self.buffer[-1] += 2 ** (7 - self.bit_length % 8)
+			self.bit_length += 1
+
+	def binary(self, message):
+		self.put(4, 4)
+		message_bytes = message.encode('utf-8')
+		self.put(len(message_bytes))
+		for m in message_bytes:
+			self.put(m)
+		self.put(0, 4)
 	
-	for f in range(0, 78 - length):
-		buf.append([0xEC, 0x11][f % 2])
+	def alphanumeric(self, message):
+		self.put(2, 4)
+		self.put(len(message), 9)
+		for pair in batched(message, 2):
+			if len(pair) == 2:
+				c1, c2 = pair
+				self.put(45 * AN_TABLE[c1] + AN_TABLE[c2], 11)
+			else:
+				(c1,) = pair
+				self.put(AN_TABLE[c1], 6)
+
+		self.put(0, 4)
+
+
+def get_codewords(message, mode=BitBuffer.binary):
+	buffer = BitBuffer()
+	mode(buffer, message)
+	codewords = buffer.buffer
 	
-	buf.extend(get_ecc_bytes(buf))
-	buf.append(0)
-	return buf
+	for f in range(0, 80 - len(codewords)):
+		codewords.append([0xEC, 0x11][f % 2])
+
+	codewords.extend(get_ecc_bytes(codewords))
+	codewords.append(0)
+	return codewords
 
 
 def top_row(j):
@@ -225,7 +273,7 @@ def put_codewords(message, size=33):
 	col = size - 1
 	d = -1
 	end = 9
-	codewords = get_bytes(message)
+	codewords = get_codewords(message, BitBuffer.alphanumeric)
 	
 	print(' '.join(f"{b:02X}" for b in codewords))
 	
@@ -263,8 +311,8 @@ def put_codewords(message, size=33):
 try:
 	
 	message = ' '.join(sys.argv[1:])
-	correct = verify_nayuki(message)
 	put_codewords(message)
+	correct = verify_nayuki_alphanumeric(message)
 
 finally:
 	if matrix == correct:
