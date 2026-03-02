@@ -87,6 +87,7 @@ def put_timing(size=33):
 
 def put_format(bits=FORMAT_L0, size=33):
 	# bits = 0b111111111111111
+	# 0b111011111000100
 	for a in range(6):
 		pxl_on(a, 8, (FORMAT_L0 >> a) & 1)
 
@@ -162,8 +163,6 @@ def iter_bits(message='HELLO WORLD!'):
 	
 	for f in range(0, 78 - length):
 		buf.append([0xEC, 0x11][f % 2])
-
-	print(' '.join(f"{b:02X}" for b in buf + get_ecc_bytes(buf)))
 	
 	for b in buf:
 		yield from iter_int_bits(b)
@@ -171,6 +170,27 @@ def iter_bits(message='HELLO WORLD!'):
 		yield from iter_int_bits(e)
 
 	yield from (0, 0, 0, 0, 0, 0, 0)
+	
+
+def get_bytes(message='HELLO WORLD!'):
+	message_bytes = message.encode('utf-8')
+	buf = bytearray([0x4 << 4])
+	
+	def pack_half(b):
+		buf[-1] |= b >> 4
+		buf.append((b & 0xF) << 4)
+
+	length = len(message_bytes)
+	pack_half(length)
+	for m in message_bytes:
+		pack_half(m)
+	
+	for f in range(0, 78 - length):
+		buf.append([0xEC, 0x11][f % 2])
+	
+	buf.extend(get_ecc_bytes(buf))
+	buf.append(0)
+	return buf
 
 
 def top_row(j):
@@ -192,14 +212,32 @@ def put_codewords(message, size=33):
 	col = size - 1
 	d = -1
 	end = 9
-	bits = iter_bits(message)
+	codewords = get_bytes(message)
+	
+	print(' '.join(f"{b:02X}" for b in codewords))
+	
+	index = 0
+	curr = codewords[0]
+	power = 128
+	
 	while col > 0:
 		for j in (col, col - 1):
 			if not skip(i, j):
-				pxl_on(i, j, next(bits) ^ mask0(i, j))
+				
+				# no-bitwise mode
+				b = int(curr >= power)
+				curr -= b * power
+				power //= 2
+				if power < 1:
+					power = 128
+					index += 1
+					curr = codewords[index]
+					# Always add remainder just so we don't go out of bounds
+				
+				pxl_on(i, j, b ^ mask0(i, j))
 
 		if i == end:
-			d *= -1
+			d = -d
 			col -= (2 + (col == 8))
 			i = top_row(col)
 			end = bottom_row(col)
