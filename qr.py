@@ -136,6 +136,19 @@ def iter_int_bits(n):
 
 
 def get_ecc_bytes(data, n_ecc=20):
+	ecc = [0] * n_ecc
+	for r, b in enumerate(data):
+		offset = r % n_ecc
+		factor = b ^ ecc[offset]
+		ecc[offset] = 0
+		if factor != 0:
+			for i, coef in enumerate(RS_POLY_20_LOG):
+				ecc[(i + r + 1) % n_ecc] ^= GF256_EXP[(coef + GF256_LOG[factor]) % 255]
+
+	return bytes(ecc)
+
+
+def get_ecc_bytes0(data, n_ecc=20):
 	ecc = deque(0 for _ in range(n_ecc))
 	for b in data:
 		factor = b ^ ecc[0]
@@ -261,5 +274,5 @@ finally:
 		diff = [
 			[col1 ^ col2 for col1, col2 in zip(row1, row2)] 
 		for row1, row2 in zip(matrix, correct)]
-		disp_graph()
+		disp_graph(diff)
 		print('Incorrect! Diff displayed.')

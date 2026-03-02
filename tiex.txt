@@ -1,0 +1,38 @@
+PRGM:QRECC
+
+seq(0,theta,1,20)->L2
+For(R,1,dim(L1
+	L1(R->B
+	1+RfPart(R/N->O
+	L2(O->A
+	prgm:XOR
+	X->F
+	0->L2(O
+	If not(F
+	Then
+		For(I,1,20
+			L3(I->C
+			1+NfPart((R+I-2)/N->E
+			L2(E->A
+			|LGFX(1+255fPart((|LGFL(C-1)+LGFL(F+1))/255->B
+			prgm:XOR
+			X->L2(E
+		End
+	End
+
+
+
+
+PRGM:XOR
+128->P
+0->X
+While P>0
+X+P(A>=P xor B>=P)->X
+A-P(A>=P->A
+B-P(B>=P->B
+P/2->P
+End
+
+
+PRGM:XOR2
+sum(seq(2^P*(iPart(2fPart(A/2^(P+1))) xor iPart(2fPart(B/2^(P+1)))),P,0,7))
