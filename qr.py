@@ -314,10 +314,15 @@ def get_codewords(message, version, encoding):
 	elif version < 11:
 		block1 = codewords[:data_length // 2]
 		block2 = codewords[data_length // 2:]
-		rs_poly = RS_POLY[version]
-		ecc1 = get_ecc_bytes(block1, rs_poly, 2)
-		ecc2 = get_ecc_bytes(block2, rs_poly, 2)
-		codewords = block1 + block2 + ecc1 + ecc2
+		ecc1 = get_ecc_bytes(block1, RS_POLY[version])
+		ecc2 = get_ecc_bytes(block2, RS_POLY[version])
+		codewords = bytearray()
+		for b1, b2 in zip(block1, block2):
+			codewords.append(b1)
+			codewords.append(b2)
+		for e1, e2 in zip(ecc1, ecc2):
+			codewords.append(e1)
+			codewords.append(e2)
 	else:
 		raise ValueError()
 	
@@ -343,4 +348,4 @@ def generate(message, version, encoding):
 			print('Incorrect! Diff displayed.')
 
 
-generate(' '.join(sys.argv[1:]), 5, 'b')
+generate(' '.join(sys.argv[1:]), 11, 'b')
