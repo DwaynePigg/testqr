@@ -1,0 +1,11 @@
+2^cumSum(binomcdf(7,0
+.5sum(Ans(1=abs(int(2fPart(Ans⁻¹(A+Bi
+
+
+sum(L1*(1=abs(int(2fPart(L2*(A+Bi
+{128,64,32,16,8,4,2,1->L1
+
+
+seq(2^N,N,7,0,-1->L1
+.5/Ans->L2
+sum(L1*(1=abs(int(2fPart(L1*(A+Bi

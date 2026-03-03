@@ -29,12 +29,14 @@ End
 PRGM:XOR
 128->P
 0->X
-While P>0
-X+P(A>=P xor B>=P)->X
+While P>1
+X+P(A>=P xor B>=P->X
 A-P(A>=P->A
 B-P(B>=P->B
 P/2->P
 End
+X
+
 
 
 PRGM:XOR2
