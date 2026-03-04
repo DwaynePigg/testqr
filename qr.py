@@ -6,25 +6,26 @@ from itertools import batched, chain, repeat
 
 from rsconst import *
 
-from qrcodegen import QrCode, QrSegment
+import qrcodegen as nayuki
 
 
 def verify(message, version, encoding):
 	if encoding == 'b':
-		seg = QrSegment.make_bytes(message.encode('utf-8'))
+		seg = nayuki.QrSegment.make_bytes(message.encode('utf-8'))
 	elif encoding == 'a':
-		seg = QrSegment.make_alphanumeric(message)
+		seg = nayuki.QrSegment.make_alphanumeric(message)
 	else:
 		raise ValueError(encoding)
 		
-	qr = QrCode.encode_segments([seg], QrCode.Ecc.LOW, minversion=version, maxversion=version, mask=0, boostecl=False)
-	size = qr.get_size()
-	matrix = Matrix(size)
+	nayuki_qr = nayuki.QrCode.encode_segments([seg], nayuki.QrCode.Ecc.LOW, minversion=version, maxversion=version, mask=0, boostecl=False)
+	size = nayuki_qr.get_size()
+	
+	qr = QrCode(version)
 	for j in range(size):
 		for i in range(size):
-			matrix.pxl_on(i, j, qr.get_module(j, i))
+			qr.pxl_on(i, j, nayuki_qr.get_module(j, i))
 
-	return matrix
+	return qr
 
 
 ALPHANUMERIC = string.digits + string.ascii_uppercase + ' $%*+-./:'
@@ -33,14 +34,26 @@ AN_TABLE = { a: i for i, a in enumerate(ALPHANUMERIC) }
 FORMAT_L0 = 0b111011111000100
 
 
-class Matrix:
 
-	def __init__(self, size):
-		self.matrix = tuple(bytearray(size) for _ in range(size))
-	
-	@property
-	def size(self):
-		return len(self.matrix)
+
+def skip_alignment(i, j, align_i, align_j):
+	return abs(i - align_i) <= 2 and abs(j - align_j) <= 2
+
+
+class QrCode:
+
+	def __init__(self, version):
+		self.version = version
+		self.size = 21 + 4 * (version - 1)
+		self.matrix = tuple(bytearray(self.size) for _ in range(self.size))
+		if version == 1:
+			self.skip = self.skip1
+		elif version < 7:
+			self.skip = self.skip2
+		elif version <= 14:
+			self.skip = self.skip7
+		else:
+			raise ValueError(version)
 
 	def pxl_on(self, i, j, state=1):
 		if not (0 <= i < self.size) or not (0 <= j < self.size):
@@ -78,9 +91,9 @@ class Matrix:
 			[1,0,0,0,1],
 			[1,1,1,1,1],
 		]
-		for r in range(5):
-			for c in range(5):
-				self.pxl_on(i + r, j + c, pattern[r][c])
+		for r in range(0, 5):
+			for c in range(0, 5):
+				self.pxl_on(i + r - 2, j + c - 2, pattern[r][c])
 
 	def put_timing(self):
 		for j in range(7, self.size - 7):
@@ -112,7 +125,16 @@ class Matrix:
 		self.put_position(0, 0)
 		self.put_position(0, self.size - 7)
 		self.put_position(self.size - 7, 0)
-		self.put_alignment(self.size - 9, self.size - 9)
+		if self.version != 1:
+			self.put_alignment(self.size - 7, self.size - 7)
+		if self.version > 6:
+			middle = 6 + (self.size - 13) // 2
+			self.put_alignment(6, middle)
+			self.put_alignment(middle, 6)
+			self.put_alignment(middle, middle)
+			self.put_alignment(middle, self.size - 7)
+			self.put_alignment(self.size - 7, middle)
+			self.put_version_info()
 		self.put_timing()
 		self.put_format()
 
@@ -122,8 +144,23 @@ class Matrix:
 	def bottom_row(self, j):
 		return self.size - 9 if j < 9 else self.size - 1
 
-	def skip(self, i, j):
-		return i == 6 or abs(i - self.size + 7) <= 2 and abs(j - self.size + 7) <= 2
+	def skip1(self, i, j):
+		return i == 6
+
+	def skip2(self, i, j):	
+		return i == 6 or skip_alignment(i, j, self.size - 7, self.size - 7)
+
+	def skip7(self, i, j):
+		middle = 6 + (self.size - 13) // 2
+		return (
+			i == 6
+			or skip_alignment(i, j, 6, middle)
+			or skip_alignment(i, j, middle, 6)
+			or skip_alignment(i, j, middle, middle)
+			or skip_alignment(i, j, middle, self.size - 7)
+			or skip_alignment(i, j, self.size - 7, middle)
+			or skip_alignment(i, j, self.size - 7, self.size - 7)
+		)
 
 	def put_codewords(self, codewords):
 		i = self.size - 1
@@ -162,81 +199,61 @@ class Matrix:
 
 	
 	def __eq__(self, other):
-		return isinstance(other, Matrix) and self.matrix == other.matrix
+		return isinstance(other, QrCode) and self.matrix == other.matrix
 	
 	def __xor__(self, other):
-		if not isinstance(other, Matrix) or self.size != other.size:
+		if not isinstance(other, QrCode) or self.size != other.size:
 			raise ValueError(other)
 			
-		x = Matrix(self.size)
+		x = QrCode(self.version)
 		for i, (row1, row2) in enumerate(zip(self.matrix, other.matrix)):
 			for j, (col1, col2) in enumerate(zip(row1, row2)):
 				x.pxl_on(i, j, col1 ^ col2)
 		return x
 	
 	def __repr__(self):
-		return f"[Matrix: {self.size}x{self.size}]"
+		return f"QrCode version {self.version} ({self.size}x{self.size})"
 
 
 def mask0(i, j):
 	return (i + j) % 2 == 0
 
 
-def iter_int_bits(n):
-	for i in range(7, -1, -1):
-		yield (n >> i) & 1
+global_xor = 0
 
 
 def get_ecc_bytes(data, rs_poly):
+	global global_xor
 	n_ecc = len(rs_poly)
 	ecc = [0] * n_ecc
 	for r, b in enumerate(data):
 		offset = r % n_ecc
 		factor = b ^ ecc[offset]
+		global_xor += 1
 		ecc[offset] = 0
 		if factor != 0:
 			for i, coef in enumerate(rs_poly):
 				ecc[(i + r + 1) % n_ecc] ^= GF256_EXP[(GF256_LOG[coef] + GF256_LOG[factor]) % 255]
+				global_xor += 1
 
 	return bytes(ecc)
 
 
 def get_ecc_bytes(data, rs_poly, blocks=1):
+	global global_xor
 	n_ecc = len(rs_poly) // blocks
 	ecc = deque(0 for _ in range(n_ecc))
 	for b in data:
 		factor = b ^ ecc[0]
+		global_xor += 1
 		ecc[0] = 0
 		ecc.rotate(-1)
 		if factor != 0:
 			for i, coef in enumerate(rs_poly):
 				ecc[i % n_ecc] ^= GF256_EXP[(GF256_LOG[coef] + GF256_LOG[factor]) % 255]
+				global_xor += 1
 
 	return bytes(ecc)
-
-
-def iter_bits(message):
-	message_bytes = message.encode('utf-8')
-	buf = bytearray([0x4 << 4])
-	
-	def pack_half(b):
-		buf[-1] |= b >> 4
-		buf.append((b & 0xF) << 4)
-
-	length = len(message_bytes)
-	pack_half(length)
-	for m in message_bytes:
-		pack_half(m)
-	
-	for f in range(0, 78 - length):
-		buf.append([0xEC, 0x11][f % 2])
-	
-	for b in buf:
-		yield from iter_int_bits(b)
-	for e in get_ecc_bytes(buf):
-		yield from iter_int_bits(e)
-
-	yield from (0, 0, 0, 0, 0, 0, 0)
 
 
 class BitBuffer:
@@ -267,17 +284,17 @@ class BitBuffer:
 				self.buffer[-1] += 2 ** (7 - self.bit_length % 8)
 			self.bit_length += 1
 
-	def binary(self, message):
+	def binary(self, message, version):
 		self.put(4, 4)
 		message_bytes = message.encode('utf-8')
-		self.put(len(message_bytes))
+		self.put(len(message_bytes), 8 if version < 10 else 16)
 		for m in message_bytes:
 			self.put(m)
 		self.put(0, 4)
 	
-	def alphanumeric(self, message):
+	def alphanumeric(self, message, version):
 		self.put(2, 4)
-		self.put(len(message), 9)
+		self.put(len(message), 9 if version < 10 else 11)
 		for pair in batched(message, 2):
 			if len(pair) == 2:
 				c1, c2 = pair
@@ -293,6 +310,16 @@ class BitBuffer:
 DATA_LENGTH = [None, 19, 34, 55, 80, 108, 136, 156, 194, 232, 274, 324]
 
 
+def interleave(blocks, rs_poly):
+	ecc_blocks = [get_ecc_bytes(block, rs_poly) for block in blocks]
+	codewords = bytearray()
+	for col in zip(*blocks):
+		codewords.extend(col)
+	for col in zip(*ecc_blocks):
+		codewords.extend(col)
+	return codewords
+
+
 def get_codewords(message, version, encoding):
 	buffer = BitBuffer()
 	if not callable(encoding):
@@ -300,52 +327,52 @@ def get_codewords(message, version, encoding):
 			'b': BitBuffer.binary,
 			'a': BitBuffer.alphanumeric,
 		}[encoding]
-	encoding(buffer, message)
-	codewords = buffer.buffer
-	
-	print(' '.join(f"{b:02X}" for b in codewords))
+	encoding(buffer, message, version)
+	data = buffer.buffer
 	
 	data_length = DATA_LENGTH[version]
-	for f in range(0, data_length - len(codewords)):
-		codewords.append([0xEC, 0x11][f % 2])
+	for f in range(0, data_length - len(data)):
+		data.append([0xEC, 0x11][f % 2])
+	
+	rs_poly = RS_POLY[version]
 	
 	if version < 6:
-		codewords.extend(get_ecc_bytes(codewords, RS_POLY[version]))
+		data.extend(get_ecc_bytes(data, RS_POLY[version]))
+		codewords = data
+	elif version == 10:
+		codewords = interleave([data[:68], data[68:136], data[136:205], data[205:]], rs_poly)
 	elif version < 11:
-		block1 = codewords[:data_length // 2]
-		block2 = codewords[data_length // 2:]
-		ecc1 = get_ecc_bytes(block1, RS_POLY[version])
-		ecc2 = get_ecc_bytes(block2, RS_POLY[version])
-		codewords = bytearray()
-		for b1, b2 in zip(block1, block2):
-			codewords.append(b1)
-			codewords.append(b2)
-		for e1, e2 in zip(ecc1, ecc2):
-			codewords.append(e1)
-			codewords.append(e2)
+		half = len(data) // 2
+		codewords = interleave([data[:half], data[half:]], rs_poly)
 	else:
 		raise ValueError()
 	
 	codewords.append(0)
+	print(' '.join(f"{b:02X}" for b in codewords))
 	return codewords
 
 
 def generate(message, version, encoding):
-	size = 21 + 4 * (version - 1)
-	matrix = Matrix(size)
-	matrix.setup()
+	qr = QrCode(version)
+	
+	# for i in range(qr.size):
+		# for j in range(qr.size):
+			# qr.pxl_on(i, j, qr.skip2(i, j))
+	
+	qr.setup()
+				
 	correct = verify(message, version, encoding)
 
 	try:
 		codewords = get_codewords(message, version, encoding)
-		matrix.put_codewords(codewords)
+		qr.put_codewords(codewords)
 	finally:
-		if matrix == correct:
-			matrix.disp()
+		if qr == correct:
+			qr.disp()
 			print('Correct!')
 		else:
-			(matrix ^ correct).disp()
+			(qr ^ correct).disp()
 			print('Incorrect! Diff displayed.')
+			print('xor', global_xor)
 
-
-generate(' '.join(sys.argv[1:]), 11, 'b')
+generate(' '.join(sys.argv[1:]), 4, 'b')
