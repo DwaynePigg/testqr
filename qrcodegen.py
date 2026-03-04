@@ -352,7 +352,7 @@ class QrCode:
 		# Split data into blocks and append ECC to each block
 		blocks: list[bytes] = []
 		rsdiv: bytes = QrCode._reed_solomon_compute_divisor(blockecclen)
-		print([b for b in rsdiv])
+		# print([b for b in rsdiv])
 		k: int = 0
 		for i in range(numblocks):
 			dat: bytearray = data[k : k + shortblocklen - blockecclen + (0 if i < numshortblocks else 1)]

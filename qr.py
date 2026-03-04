@@ -1,8 +1,7 @@
-import sys
 import string
 
 from collections import deque
-from itertools import batched, chain, repeat
+from itertools import batched, chain
 
 from rsconst import *
 
@@ -11,12 +10,12 @@ import qrcodegen as nayuki
 
 def verify(message, version, encoding):
 	if encoding == 'b':
-		seg = nayuki.QrSegment.make_bytes(message.encode('utf-8'))
+		seg = nayuki.QrSegment.make_bytes(message)
 	elif encoding == 'a':
-		seg = nayuki.QrSegment.make_alphanumeric(message)
+		seg = nayuki.QrSegment.make_alphanumeric(message.decode('ascii'))
 	else:
 		raise ValueError(encoding)
-		
+	
 	nayuki_qr = nayuki.QrCode.encode_segments([seg], nayuki.QrCode.Ecc.LOW, minversion=version, maxversion=version, mask=0, boostecl=False)
 	size = nayuki_qr.get_size()
 	
@@ -28,7 +27,7 @@ def verify(message, version, encoding):
 	return qr
 
 
-ALPHANUMERIC = string.digits + string.ascii_uppercase + ' $%*+-./:'
+ALPHANUMERIC = (string.digits + string.ascii_uppercase + ' $%*+-./:').encode('ascii')
 AN_TABLE = { a: i for i, a in enumerate(ALPHANUMERIC) }
 
 FORMAT_L0 = 0b111011111000100
@@ -300,9 +299,8 @@ class BitBuffer:
 
 	def binary(self, message, version):
 		self.put(4, 4)
-		message_bytes = message.encode('utf-8')
-		self.put(len(message_bytes), 8 if version < 10 else 16)
-		for m in message_bytes:
+		self.put(len(message), 8 if version < 10 else 16)
+		for m in message:
 			self.put(m)
 		self.put(0, 4)
 	
@@ -359,8 +357,10 @@ def get_codewords(message, version, encoding):
 		}[encoding]
 	encoding(buffer, message, version)
 	data = buffer.buffer
-	
+
 	data_length = DATA_LENGTH[version]
+	if len(data) > data_length:
+		raise ValueError(len(data))
 	for f in range(0, data_length - len(data)):
 		data.append([0xEC, 0x11][f % 2])
 	
@@ -371,7 +371,6 @@ def get_codewords(message, version, encoding):
 		codewords = data
 	elif version == 10:
 		codewords = interleave([data[:68], data[68:136], data[136:205], data[205:]], rs_poly)
-		print(len(data), len(codewords))
 	elif version == 11:
 		q = len(data) // 4
 		codewords = interleave([data[:q], data[q:2*q], data[2*q:3*q], data[3*q:]], rs_poly)		
@@ -381,28 +380,19 @@ def get_codewords(message, version, encoding):
 	else:
 		raise ValueError(version)
 	
-	
 	codewords.append(0)
 	print(' '.join(f"{b:02X}" for b in codewords))
 	return codewords
 
 
 def generate(message, version, encoding):
-	qr = QrCode(version)
-	
-	# for i in range(qr.size):
-		# for j in range(qr.size):
-			# qr.pxl_on(i, j, not qr.skip7(i, j))
-	
+	qr = QrCode(version)	
 	qr.setup()
-	qr.disp()
-
-	correct = verify(message, version, encoding)
-
 	try:
 		codewords = get_codewords(message, version, encoding)
 		qr.put_codewords(codewords)
 	finally:
+		correct = verify(message, version, encoding)
 		if qr == correct:
 			qr.disp()
 			print('Correct!')
@@ -411,4 +401,41 @@ def generate(message, version, encoding):
 			print('Incorrect! Diff displayed.')
 		print('xor', global_xor)
 
-generate(' '.join(sys.argv[1:]), 10, 'b')
+
+if __name__ == '__main__':
+	import argparse
+	from bisect import bisect_left
+	from pathlib import Path
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-i', '--input', type=Path)
+	parser.add_argument('-v', '--version', type=int)
+	parser.add_argument('-e', '--encoding')
+	args, tokens = parser.parse_known_args()
+	
+	if tokens and args.input:
+		parser.error(f"Received input file and message args")
+	
+	if args.input:
+		with open(args.input, 'rb') as f:
+			message = f.read()
+	else:
+		message = ' '.join(tokens).encode('utf-8')
+		
+	version = args.version
+	encoding = args.encoding
+	if encoding is None:
+		a_set = frozenset(ALPHANUMERIC)
+		# all(0x7fffffe07ffec3100000000 & (1<<ord(a)) for a in message)
+		encoding = 'a' if all(a in a_set for a in message) else 'b'
+
+	if version is None:
+		b_length = [17, 32, 53,  78, 106, 134, 154, 192, 230, 271, 321]
+		a_length = [25, 47, 77, 114, 154, 195, 224, 279, 335, 395, 468]
+		table = a_length if encoding == 'a' else b_length
+		index = bisect_left(table, len(message))
+		if index == len(table):
+			parser.error(f"Message too long ({len(message)})")
+		version = index + 1
+	
+	generate(message, version, encoding)
