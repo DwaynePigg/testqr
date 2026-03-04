@@ -23,7 +23,7 @@ def verify(message, version, encoding):
 	qr = QrCode(version)
 	for j in range(size):
 		for i in range(size):
-			qr.pxl_on(i, j, nayuki_qr.get_module(j, i))
+			qr.pxl_on(i, j, nayuki_qr.get_module(j, i))  # nayuki flips i/j
 
 	return qr
 
@@ -33,7 +33,13 @@ AN_TABLE = { a: i for i, a in enumerate(ALPHANUMERIC) }
 
 FORMAT_L0 = 0b111011111000100
 
-
+VERSION_INFO = [
+	0b000111110010010100,
+	0b001000010110111100,
+	0b001001101010011001,
+	0b001010010011010011,
+	0b001011101111110110,
+]
 
 
 def skip_alignment(i, j, align_i, align_j):
@@ -64,7 +70,7 @@ class QrCode:
 		print('▒' * (self.size + 4))
 		for row1, row2 in batched(chain(self.matrix, [(0 for _ in range(self.size))]), 2):
 			print('▒▒', end='')
-			for px1, px2 in zip(row1, row2):
+			for px1, px2 in zip(row1, row2, strict=True):
 				print(' ▀▄█'[~(px1 | (px2 << 1))], end='')
 			print('▒▒')
 		print('▒' * (self.size + 4))
@@ -121,6 +127,13 @@ class QrCode:
 		for a in range(7):
 			self.pxl_on(self.size - 7 + a, 8, (FORMAT_L0 >> 8 + a) & 1)
 	
+	def put_version_info(self):
+		bits = VERSION_INFO[self.version - 7]
+		for i in range(18):
+			b = (bits >> i) & 1
+			self.pxl_on(self.size - 11 + (i % 3), i // 3, b)
+			self.pxl_on(i // 3, self.size - 11 + (i % 3), b)
+	
 	def setup(self):
 		self.put_position(0, 0)
 		self.put_position(0, self.size - 7)
@@ -160,6 +173,8 @@ class QrCode:
 			or skip_alignment(i, j, middle, self.size - 7)
 			or skip_alignment(i, j, self.size - 7, middle)
 			or skip_alignment(i, j, self.size - 7, self.size - 7)
+			or self.size - 11 <= i <= self.size - 9 and 0 <= j <= 5
+			or self.size - 11 <= j <= self.size - 9 and 0 <= i <= 5
 		)
 
 	def put_codewords(self, codewords):
@@ -197,7 +212,6 @@ class QrCode:
 			else:
 				i += d
 
-	
 	def __eq__(self, other):
 		return isinstance(other, QrCode) and self.matrix == other.matrix
 	
@@ -206,8 +220,8 @@ class QrCode:
 			raise ValueError(other)
 			
 		x = QrCode(self.version)
-		for i, (row1, row2) in enumerate(zip(self.matrix, other.matrix)):
-			for j, (col1, col2) in enumerate(zip(row1, row2)):
+		for i, (row1, row2) in enumerate(zip(self.matrix, other.matrix, strict=True)):
+			for j, (col1, col2) in enumerate(zip(row1, row2, strict=True)):
 				x.pxl_on(i, j, col1 ^ col2)
 		return x
 	
@@ -306,16 +320,32 @@ class BitBuffer:
 		self.put(0, 4)
 
 
-
 DATA_LENGTH = [None, 19, 34, 55, 80, 108, 136, 156, 194, 232, 274, 324]
 
 
+def zip_skip(*iterables):
+	iterators = [iter(i) for i in iterables]
+	while True:
+		values = []
+		for it in iterators:
+			try:
+				value = next(it)
+			except StopIteration:
+				pass
+			else:
+				values.append(value)
+
+		if not values:
+			return
+
+		yield tuple(values)
+
+
 def interleave(blocks, rs_poly):
-	ecc_blocks = [get_ecc_bytes(block, rs_poly) for block in blocks]
 	codewords = bytearray()
-	for col in zip(*blocks):
+	for col in zip_skip(*blocks):
 		codewords.extend(col)
-	for col in zip(*ecc_blocks):
+	for col in zip(*(get_ecc_bytes(block, rs_poly) for block in blocks), strict=True):
 		codewords.extend(col)
 	return codewords
 
@@ -341,11 +371,16 @@ def get_codewords(message, version, encoding):
 		codewords = data
 	elif version == 10:
 		codewords = interleave([data[:68], data[68:136], data[136:205], data[205:]], rs_poly)
+		print(len(data), len(codewords))
+	elif version == 11:
+		q = len(data) // 4
+		codewords = interleave([data[:q], data[q:2*q], data[2*q:3*q], data[3*q:]], rs_poly)		
 	elif version < 11:
-		half = len(data) // 2
-		codewords = interleave([data[:half], data[half:]], rs_poly)
+		h = len(data) // 2
+		codewords = interleave([data[:h], data[h:]], rs_poly)
 	else:
-		raise ValueError()
+		raise ValueError(version)
+	
 	
 	codewords.append(0)
 	print(' '.join(f"{b:02X}" for b in codewords))
@@ -357,10 +392,11 @@ def generate(message, version, encoding):
 	
 	# for i in range(qr.size):
 		# for j in range(qr.size):
-			# qr.pxl_on(i, j, qr.skip2(i, j))
+			# qr.pxl_on(i, j, not qr.skip7(i, j))
 	
 	qr.setup()
-				
+	qr.disp()
+
 	correct = verify(message, version, encoding)
 
 	try:
@@ -373,6 +409,6 @@ def generate(message, version, encoding):
 		else:
 			(qr ^ correct).disp()
 			print('Incorrect! Diff displayed.')
-			print('xor', global_xor)
+		print('xor', global_xor)
 
-generate(' '.join(sys.argv[1:]), 4, 'b')
+generate(' '.join(sys.argv[1:]), 10, 'b')
