@@ -182,6 +182,8 @@ class QrCode:
 		
 		# Compute ECC, draw modules
 		self._draw_function_patterns()
+		# print('NAYUKI')
+		# print(' '.join(f"{b:02X}" for b in bytes(datacodewords)))
 		allcodewords: bytes = self._add_ecc_and_interleave(bytearray(datacodewords))
 		self._draw_codewords(allcodewords)
 		

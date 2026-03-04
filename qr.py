@@ -302,7 +302,6 @@ class BitBuffer:
 		self.put(len(message), 8 if version < 10 else 16)
 		for m in message:
 			self.put(m)
-		self.put(0, 4)
 	
 	def alphanumeric(self, message, version):
 		self.put(2, 4)
@@ -315,10 +314,8 @@ class BitBuffer:
 				(c1,) = pair
 				self.put(AN_TABLE[c1], 6)
 
-		self.put(0, 4)
 
-
-DATA_LENGTH = [None, 19, 34, 55, 80, 108, 136, 156, 194, 232, 274, 324]
+BIT_LENGTH = [152, 272, 440, 640, 864, 1088, 1248, 1552, 1856, 2192, 2592]
 
 
 def zip_skip(*iterables):
@@ -358,11 +355,16 @@ def get_codewords(message, version, encoding):
 	encoding(buffer, message, version)
 	data = buffer.buffer
 
-	data_length = DATA_LENGTH[version]
-	if len(data) > data_length:
-		raise ValueError(len(data))
-	for f in range(0, data_length - len(data)):
+	max_bits = BIT_LENGTH[version - 1]
+	if buffer.bit_length > max_bits:
+		raise ValueError(f"bits: {buffer.bit_length}; max {max_bits}")
+	
+	buffer.put(0, min(4, max_bits - buffer.bit_length))
+
+	for f in range(0, max_bits // 8 - len(data)):
 		data.append([0xEC, 0x11][f % 2])
+	
+	print(' '.join(f"{b:02X}" for b in data))
 	
 	rs_poly = RS_POLY[version]
 	
@@ -381,7 +383,6 @@ def get_codewords(message, version, encoding):
 		raise ValueError(version)
 	
 	codewords.append(0)
-	print(' '.join(f"{b:02X}" for b in codewords))
 	return codewords
 
 
