@@ -41,3 +41,42 @@ X
 
 PRGM:XOR2
 sum(seq(2^P*(iPart(2fPart(A/2^(P+1))) xor iPart(2fPart(B/2^(P+1)))),P,0,7))
+
+sum(seq(2^PfPart(.5int(2fPart(A/2^P))+.5int(2fPart(B/2^P))),P,1,8
+
+sum(
+	seq(
+		2^PfPart(
+			.5int(
+				2fPart(
+					A/2^P
+				)
+			)+.5int(
+				2fPart(
+					B/2^P
+				)
+			)
+		),P,1,8
+	)
+)
+
+
+sum(
+	seq(
+		2^PfPart(
+			.5int(
+				2fPart(
+					A/2^P
+				)
+			).5int(
+				2fPart(
+					B/2^P
+				)
+			)
+		)2,P,1,8
+	))
+	
+	
+:int(log(2)⁻¹log(max({A,B
+:2^cumSum(binomcdf(Ans,0
+:sum(Ans.5(1=abs(int(2fPart(Ans⁻¹(A+Bi
