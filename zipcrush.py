@@ -1,4 +1,5 @@
 import argparse
+import zipfile
 from io import BytesIO
 from pathlib import Path
 from PIL import Image, ImageOps
@@ -33,12 +34,18 @@ while lo < hi:
 	index = (lo + hi) // 2
 	width, height = dim(index)
 	image = ImageOps.fit(original, (width, height), Image.LANCZOS)
-	buffer.seek(0)
+	# buffer.seek(0)
 	buffer.truncate()
 	image.save(buffer, 'JPEG', quality=1, optimize=True)
 	file_size = buffer.tell()
-	over_limit = file_size > args.limit
-	print(f"{index}. {width} x {height}: {file_size} bytes{'' if over_limit else ' *'}")
+	buffer.seek(0)
+	zip_buffer = BytesIO()
+	with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as z:
+		z.writestr('0.jpg', buffer.getvalue())
+	
+	zip_size = zip_buffer.tell()
+	over_limit = zip_size > args.limit
+	print(f"{index}. {width} x {height}: {file_size} bytes, {zip_size} zipped {'' if over_limit else ' *'}")
 	
 	if over_limit:
 		hi = index
