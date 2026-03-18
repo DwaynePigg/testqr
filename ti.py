@@ -21,6 +21,7 @@ class TIList(list):
 	def __repr__(self):
 		return f"{{{','.join(repr(o) for o in self)}}}"
 
+
 for name, op in [
 	('__add__', operator.add),
 	('__radd__', operator.add),
@@ -28,6 +29,7 @@ for name, op in [
 	('__rsub__', lambda a, b: b - a),
 	('__mul__', operator.mul),
 	('__rmul__', operator.mul),
+	# Can I use Fractions here?
 	('__truediv__', operator.truediv),
 	('__rtruediv__', lambda a, b: b / a),
 	('__pow__', pow),
@@ -141,9 +143,9 @@ for I in For(1, dim(L1)):
 	F = .5*sum(L4*(1==abs(int(2*fPart(complex(L2[1],B)/L4)))))
 	L2 = delta_list(cumSum(L2))
 	L2[1 + dim(L2)] = 0
-	for J in For(1, (F!=0)*dim(L3)):
+	for J in For(1,(F!=0)*dim(L3)):
 		Ans = LGFL[L3[J]] + LGFL[F]
-		L2[J] = .5*sum(L4*(1==abs(int(2*fPart(complex(L2[J],LGFX[1 + Ans - 255 * (Ans > 254)])/L4)))))
+		L2[J] = .5*sum(L4*(1==abs(int(2*fPart(complex(L2[J],LGFX[1+Ans-255*(Ans > 254)])/L4)))))
 
 print(' '.join(f"{round(b):02X}" for b in L2))
 print(L2)
