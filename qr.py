@@ -252,9 +252,9 @@ def get_ecc_bytes(data, rs_poly):
 	return bytes(ecc)
 
 
-def get_ecc_bytes(data, rs_poly, blocks=1):
+def get_ecc_bytes(data, rs_poly):
 	global global_xor
-	n_ecc = len(rs_poly) // blocks
+	n_ecc = len(rs_poly)
 	ecc = deque(0 for _ in range(n_ecc))
 	for b in data:
 		factor = b ^ ecc[0]
@@ -364,7 +364,7 @@ def get_codewords(message, version, encoding):
 	for f in range(0, max_bits // 8 - len(data)):
 		data.append([0xEC, 0x11][f % 2])
 	
-	print(' '.join(f"{b:02X}" for b in data))
+	# print(' '.join(f"{b:02X}" for b in data))
 	
 	rs_poly = RS_POLY[version]
 	
@@ -391,6 +391,7 @@ def generate(message, version, encoding):
 	qr.setup()
 	try:
 		codewords = get_codewords(message, version, encoding)
+		print(' '.join(f"{b:02X}" for b in codewords))
 		qr.put_codewords(codewords)
 	finally:
 		correct = verify(message, version, encoding)
