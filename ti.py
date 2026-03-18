@@ -30,8 +30,16 @@ for name, op in [
 	('__rmul__', operator.mul),
 	('__truediv__', operator.truediv),
 	('__rtruediv__', lambda a, b: b / a),
-	('__pow__', operator.pow),
+	('__pow__', pow),
 	('__rpow__', lambda a, b: b ** a),
+	('__round__', round),
+	('__trunc__', math.trunc),
+	('__and__', lambda a, b: a and b),
+	('__rand__', lambda a, b: a and b),
+	('__or__', lambda a, b: a or b),
+	('__ror__', lambda a, b: a or b),
+	('__xor__', lambda a, b: bool(a) ^ bool(b)),
+	('__rxor__', lambda a, b: bool(a) ^ bool(b)),
 	('__eq__', operator.eq),
 	('__ne__', operator.ne),
 	('__lt__', operator.lt),
@@ -57,6 +65,14 @@ for name, op in [
 	setattr(TIList, name, list_op)
 
 
+def handle_complex(func):
+	def apply(a):
+		if isinstance(a, complex):
+			return complex(func(a.real), func(a.imag))
+		return func(a)
+	return apply
+
+
 def vectorized(func):
 	def apply(*args):
 		vec = []
@@ -79,40 +95,39 @@ def vectorized(func):
 dim = len
 
 @vectorized
-def iPart(N):
-	return builtins.int(N)
-
-@vectorized	
-def int(N):
-	return math.floor(N)
+@handle_complex
+def iPart(a):
+	return math.trunc(a)
 
 @vectorized
-def fPart(N):
-	return N % 1
-
-def cumSum(L):
-	return TIList(accumulate(L))
-
-def delta_list(L):
-	return TIList([b - a for a, b in pairwise(L)])
-
-def augment(*lists):
-	return TIList(chain.from_iterable(lists))
+@handle_complex
+def int(a):
+	return math.floor(a)
 
 @vectorized
-def real(N):
-	return N.real
+@handle_complex
+def fPart(a):
+	return a - math.trunc(a)
+
+def cumSum(a):
+	return TIList(accumulate(a))
+
+def delta_list(a):
+	return TIList([b - a for a, b in pairwise(a)])
+
+def augment(*args):
+	return TIList(chain.from_iterable(args))
 
 @vectorized
-def imag(N):
-	return N.imag
+def real(a):
+	return a.real
+
+@vectorized
+def imag(a):
+	return a.imag
 
 def For(start, stop, step=1):
-	return range(start, stop + 1, step)
-
-@vectorized
-def XOR(a, b):
-	return a ^ b
+	return range(start, stop + 1 if step > 0 else -1, step)
 
 
 LGFL = TIList([0,1,25,2,50,26,198,3,223,51,238,27,104,199,75,4,100,224,14,52,141,239,129,28,193,105,248,200,8,76,113,5,138,101,47,225,36,15,33,53,147,142,218,240,18,130,69,29,181,194,125,106,39,249,185,201,154,9,120,77,228,114,166,6,191,139,98,102,221,48,253,226,152,37,179,16,145,34,136,54,208,148,206,143,150,219,189,241,210,19,92,131,56,70,64,30,66,182,163,195,72,126,110,107,58,40,84,250,133,186,61,202,94,155,159,10,21,121,43,78,212,229,172,115,243,167,87,7,112,192,247,140,128,99,13,103,74,222,237,49,197,254,24,227,165,153,119,38,184,180,124,17,68,146,217,35,32,137,46,55,63,209,91,149,188,207,205,144,135,151,178,220,252,190,97,242,86,211,171,20,42,93,158,132,60,57,83,71,109,65,162,31,45,67,216,183,123,164,118,196,23,73,236,127,12,111,246,108,161,59,82,41,157,85,170,251,96,134,177,187,204,62,90,203,89,95,176,156,169,160,81,11,245,22,235,122,117,44,215,79,174,213,233,230,231,173,232,116,214,244,234,168,80,88,175])  # original list is undefined at 0. I removed element 0 here, so this list is kind of 0-indexed now
@@ -123,14 +138,23 @@ LRS7 = TIList([127, 122, 154, 164, 11, 68, 117])
 L1 = TIList([65, 23, 119, 119, 114, 231, 118, 150, 182, 151, 6, 86, 70, 150, 18, 230, 247, 38, 112])
 L3 = LRS7
 L2 = TIList(0 for _ in For(1, dim(L3)))
+L4 = TIList(2 ** N for N in For(8,1,-1))
+
 for I in For(1, dim(L1)):
 	B = L1[I]
-	F = XOR(B, L2[1])
+	F = .5*sum(L4*(1==abs(int(2*fPart(complex(L2[1],B)/L4)))))
 	L2 = delta_list(cumSum(L2))
 	L2[1 + dim(L2)] = 0
 	for J in For(1, (F!=0)*dim(L3)):
 		Ans = LGFL[L3[J]] + LGFL[F]
-		L2[J] = XOR(L2[J], LGFX[1 + Ans - 255 * (Ans > 254)])
+		L2[J] = .5*sum(L4*(1==abs(int(2*fPart(complex(L2[J],LGFX[1 + Ans - 255 * (Ans > 254)])/L4)))))
 
+print(' '.join(f"{round(b):02X}" for b in L2))
 print(L2)
-print(' '.join(f"{b:02X}" for b in L2))
+
+
+for A in range(255):
+	for B in range(255):
+		ti_xor = .5*sum(L4*(1==abs(int(2*fPart(complex(A,B)/L4)))))
+		if ti_xor != A ^ B:
+			raise ValueError(A, B, ti_xor, A ^ B)
