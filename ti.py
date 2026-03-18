@@ -80,11 +80,8 @@ def vectorized(func):
 	def apply(*args):
 		if not any(isinstance(a, TIList) for a in args):
 			return func(*args)
-		return TIList(func(*v) for v in zip(*(
-			a if isinstance(a, TIList) else repeat(a) 
-			for a in args
-		)))
-
+		vec = (a if isinstance(a, TIList) else repeat(a) for a in args)
+		return TIList(func(*v) for v in zip(*vec))
 	return apply
 
 
