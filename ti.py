@@ -66,11 +66,7 @@ for name, op in [
 
 
 def handle_complex(func):
-	def apply(a):
-		if isinstance(a, complex):
-			return complex(func(a.real), func(a.imag))
-		return func(a)
-	return apply
+	return lambda a: complex(func(a.real), func(a.imag)) if isinstance(a, complex) else func(a)
 
 
 def vectorized(func):
