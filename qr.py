@@ -263,7 +263,7 @@ def get_ecc_bytes(data, rs_poly):
 		ecc.rotate(-1)
 		if factor != 0:
 			for i, coef in enumerate(rs_poly):
-				ecc[i % n_ecc] ^= GF256_EXP[(GF256_LOG[coef] + GF256_LOG[factor]) % 255]
+				ecc[i] ^= GF256_EXP[(GF256_LOG[coef] + GF256_LOG[factor]) % 255]
 				global_xor += 1
 
 	return bytes(ecc)
