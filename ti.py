@@ -1,3 +1,4 @@
+from functools import wraps
 from itertools import accumulate, pairwise, chain, repeat
 import builtins
 import math
@@ -14,7 +15,7 @@ class TIList(list):
 		if i == len(self) + 1:
 			self.append(n)
 		elif not(1 <= i <= len(self)):
-			raise ValueError('out of bounds')
+			raise ValueError(f"out of bounds: {i}; dim: {len(self)}")
 		else:
 			super().__setitem__(i - 1, n)
 	
@@ -68,25 +69,22 @@ for name, op in [
 
 
 def handle_complex(func):
-	return lambda a: complex(func(a.real), func(a.imag)) if isinstance(a, complex) else func(a)
+	@wraps(func)
+	def apply(a):
+		return complex(func(a.real), func(a.imag)) if isinstance(a, complex) else func(a)
+	return apply
 
 
 def vectorized(func):
+	@wraps(func)
 	def apply(*args):
-		vec = []
-		mode = False
-		for a in args:
-			if isinstance(a, TIList):
-				vec.append(a)
-				mode = True
-			else:
-				vec.append(repeat(a))
+		if not any(isinstance(a, TIList) for a in args):
+			return func(*args)
+		return TIList(func(*v) for v in zip(*(
+			a if isinstance(a, TIList) else repeat(a) 
+			for a in args
+		)))
 
-		if mode:
-			return TIList(func(*p) for p in zip(*vec))
-		
-		return func(*args)
-			
 	return apply
 
 
@@ -145,14 +143,14 @@ for I in For(1, dim(L1)):
 	L2[1 + dim(L2)] = 0
 	for J in For(1,(F!=0)*dim(L3)):
 		Ans = LGFL[L3[J]] + LGFL[F]
-		L2[J] = .5*sum(L4*(1==abs(int(2*fPart(complex(L2[J],LGFX[1+Ans-255*(Ans > 254)])/L4)))))
+		L2[J] = .5*sum(L4*(1==abs(int(2*fPart(complex(L2[J],LGFX[1+Ans-255*(Ans>254)])/L4)))))
 
 print(' '.join(f"{round(b):02X}" for b in L2))
 print(L2)
 
 
-for A in range(255):
-	for B in range(255):
+for A in range(256):
+	for B in range(256):
 		ti_xor = .5*sum(L4*(1==abs(int(2*fPart(complex(A,B)/L4)))))
 		if ti_xor != A ^ B:
 			raise ValueError(A, B, ti_xor, A ^ B)
