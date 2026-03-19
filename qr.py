@@ -287,7 +287,7 @@ class BitBuffer:
 			n -= bit * power
 			power /= 2
 
-	def put(self, n, size=8):
+	def put(self, n, size):
 		for i in range(size - 1, -1, -1):
 			bit = int(n / (2 ** i)) % 2
 			# bit2 = int(2 * ((int(n / (2 ** i)) / 2) % 1))
@@ -296,6 +296,10 @@ class BitBuffer:
 			if bit:
 				self.buffer[-1] += 2 ** (7 - self.bit_length % 8)
 			self.bit_length += 1
+
+	def put2(self, n, size):
+		print(n >> (self.bit_length % 8))
+		
 
 	def binary(self, message, version):
 		self.put(4, 4)
