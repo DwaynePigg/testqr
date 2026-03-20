@@ -305,7 +305,7 @@ class BitBuffer:
 		self.put(4, 4)
 		self.put(len(message), 8 if version < 10 else 16)
 		for m in message:
-			self.put(m)
+			self.put(m, 8)
 	
 	def alphanumeric(self, message, version):
 		self.put(2, 4)
@@ -368,8 +368,6 @@ def get_codewords(message, version, encoding):
 	for f in range(0, max_bits // 8 - len(data)):
 		data.append([0xEC, 0x11][f % 2])
 	
-	# print(' '.join(f"{b:02X}" for b in data))
-	
 	rs_poly = RS_POLY[version]
 	
 	if version < 6:
@@ -385,7 +383,7 @@ def get_codewords(message, version, encoding):
 		codewords = interleave([data[:h], data[h:]], rs_poly)
 	else:
 		raise ValueError(version)
-	
+		
 	codewords.append(0)
 	return codewords
 

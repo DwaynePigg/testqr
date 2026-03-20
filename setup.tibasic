@@ -1,0 +1,64 @@
+If V=1
+152->M
+L_RS7->L2
+Then
+Else
+If V=2
+272->M
+L_RS10->L2
+Then
+Else
+If V=3
+440->M
+L_RS15->L2
+Then
+Else
+If V=4
+640->M
+L_RS20->L2
+Then
+Else
+If V=5
+864->M
+L_RS26->L2
+Then
+Else
+If V=6
+1088->M
+L_RS18->L2
+Then
+Else
+If V=7
+1248->M
+L_RS20->L2
+Then
+Else
+If V=8
+1552->M
+L_RS24->L2
+Then
+Else
+If V=9
+1856->M
+L_RS30->L2
+Then
+Else
+If V=10
+2192->M
+L_RS18->L2
+Then
+Else
+If V=11
+2592->M
+L_RS20->L2
+End
+End
+End
+End
+End
+End
+End
+End
+End
+End
+End
