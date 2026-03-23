@@ -371,7 +371,7 @@ def get_codewords(message, version, encoding):
 	rs_poly = RS_POLY[version]
 	
 	if version < 6:
-		data.extend(get_ecc_bytes(data, RS_POLY[version]))
+		data.extend(get_ecc_bytes(data, rs_poly))
 		codewords = data
 	elif version == 10:
 		codewords = interleave([data[:68], data[68:136], data[136:205], data[205:]], rs_poly)
@@ -393,6 +393,7 @@ def generate(message, version, encoding):
 	qr.setup()
 	try:
 		codewords = get_codewords(message, version, encoding)
+		print(list(codewords))
 		print(' '.join(f"{b:02X}" for b in codewords))
 		qr.put_codewords(codewords)
 	finally:

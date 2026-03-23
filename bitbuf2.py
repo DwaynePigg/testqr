@@ -24,8 +24,7 @@ def put(N, S):
 		R = R-8
 
 	if R>0:
-		Ans = 2**R
-		L1.append(Ans*fPart(N/Ans)*2**(8-R))
+		L1.append(256*fPart(N/2**R))
 
 	L = L+S
 
