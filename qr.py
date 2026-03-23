@@ -1,3 +1,4 @@
+import math
 import string
 
 from collections import deque
@@ -39,6 +40,12 @@ VERSION_INFO = [
 	0b001010010011010011,
 	0b001011101111110110,
 ]
+
+def iPart(num):
+	return math.trunc(num)
+
+def fPart(num):
+	return num - math.trunc(num)
 
 
 class QrCode:
@@ -160,8 +167,12 @@ class QrCode:
 
 	def skip7(self, i, j):
 		dist = 2 * self.version + 2
+		a = (i - 4) % dist
+		b = round(dist * fPart((i + dist - 4) / dist))
+		if a != b:
+			raise ValueError(a, b)
 		return (i == 6
-			or abs((i - 4) % dist) <= 4 and abs((j - 4) % dist) <= 4 and (abs(i - j) <= self.size / 2 - 2)
+			or dist * fPart((i+2*self.version-2) / dist) <= 4.01 and dist * fPart((j+2*self.version-2) / dist) <= 4.01 and (abs(i - j) <= self.size / 2 - 2)
 			or i >= self.size - 11 and j <= 5
 			or j >= self.size - 11 and i <= 5
 		)
