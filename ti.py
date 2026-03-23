@@ -1,10 +1,10 @@
 import math
-import numbers
 import operator
 import sys
 from functools import wraps
 from itertools import accumulate, pairwise, chain, repeat
 from math import prod
+from numbers import Number
 
 import qr
 
@@ -15,16 +15,17 @@ class TIList:
 		self.inner = list(data)
 	
 	def __getitem__(self, i):
-		return self.inner[round(i) - 1]
+		if i != int(i) or not(1 <= i <= len(self)):
+			raise IndexError(f"{i=}")
+		return self.inner[int(i) - 1]
 	
 	def __setitem__(self, i, n):
-		i = round(i)
 		if i == len(self) + 1:
 			self.inner.append(n)
-		elif not(1 <= i <= len(self)):
+		elif i != int(i) or not(1 <= i <= len(self)):
 			raise ValueError(f"out of bounds: {i}; dim: {len(self)}")
 		else:
-			self.inner[i - 1] = n
+			self.inner[int(i) - 1] = n
 	
 	def __len__(self):
 		return len(self.inner)
@@ -100,7 +101,7 @@ for name, op in [
 
 
 def _check_number(num):
-	if not isinstance(num, numbers.Number):
+	if not isinstance(num, Number):
 		raise ValueError(f"Not a number: {num}")
 	return num
 
@@ -123,7 +124,7 @@ def ti_list(data):
 
 class _ListAlias:
 	def __getitem__(self, data):
-		return ti_list((data,) if isinstance(data, numbers.Number) else data)
+		return ti_list((data,) if isinstance(data, Number) else data)
 
 L_ = _ListAlias()
 
@@ -170,7 +171,13 @@ def dim(lst):
 	return len(_check_list(lst))
 
 def set_dim(lst, new_dim):
-	del lst.inner[new_dim:]
+	if new_dim < len(lst):
+		del lst.inner[new_dim:]
+	elif new_dim > len(lst):
+		lst.inner.extend(0 for _ in range(new_dim - len(lst)))
+
+def copy_list(lst):
+	return TIList(list(_check_list(lst).inner))
 
 @vectorized
 def not_(num):
@@ -225,7 +232,13 @@ def Fill(lst, num):
 		inner[i] = num
 
 def For(start, stop, step=1):
-	return range(start, stop + 1 if step > 0 else -1, step)
+	if step == 0:
+		raise ValueError(f"{step=}")
+	n = start
+	op = operator.le if step > 0 else operator.ge
+	while op(n, stop):
+		yield n
+		n += step
 
 expr = eval
 
@@ -243,12 +256,37 @@ def sub(s, start, length):
 		raise ValueError(s, start, length)
 	return s[start - 1 : start - 1 + length]
 
+def DelVar(v):
+	if isinstance(v, TIList):
+		del v.inner[:]
+	raise ValueError(v)
 
-###################
-###################
-#### END SETUP ####
-###################
-###################
+
+#############################
+#############################
+#### END TI-PYTHON SETUP ####
+#############################
+#############################
+
+# L1 = seq(range(16))
+# print(L1)
+
+# Q=dim(L1)/4
+
+# L1 = seq(
+	# not_(fPart(N))*L1[int(N)]
+	# +(fPart(N)==.25)*L1[Q+int(N)]
+	# +(fPart(N)==.5)*L1[2*Q+int(N)]
+	# +(fPart(N)==.75)*L1[3*Q+int(N)]
+	# for N in For(1,Q+.75,.25)
+# )
+
+# # L1 = seq(not_(fPart(I/2))*L1[int(I/2)]+2*fPart(I/2)*L1[H+int(I/2)] for I in For(2,1+dim(L1)))
+# # L1 = seq((fPart(I/2)==0)*L1[int(I/2)]+(fPart(I/2)==.5)*L1[H+int(I/2)] for I in For(2,1+dim(L1)))
+
+# print(L1)
+
+# Stop()
 
 
 Str1 = "ATTACK AT DAWN!"
@@ -261,6 +299,7 @@ else:
 	Ans = L_[17,32,53,78,106,134,154,192,230,271,321]
 
 V = 1+sum(Ans<length(Str1))
+V = 11
 
 if V>11:
 	Disp("Message too long")
@@ -394,30 +433,98 @@ for F in For(1,int(M/8)-dim(L_CW)):
 
 print('MSG:', L_CW)
 
-L1 = seq(0 for I in For(1,dim(L2)))  # ECC buffer
 L3 = seq(2 ** I for I in For(8,1,-1))  # Powers of 2 for fast XOR
 
-for I in For(1,dim(L_CW)):
-	B = L_CW[I]
-	F = .5*sum(L3*(1==abs(int(2*fPart(complex(L1[1],B)/L3)))))
-	L1 = delta_list(cumSum(L1))
-	L1[1 + dim(L1)] = 0
-	for J in For(1,(F!=0)*dim(L2)):
-		Ans = L_GFL[L2[J]] + L_GFL[F]
-		L1[J] = .5*sum(L3*(1==abs(int(2*fPart(complex(L1[J],L_GFX[1+Ans-255*(Ans>254)])/L3)))))
+def prgmQRECC():
+	global L_CW, L1, L2, L3, S, E
+	L1 = L_[()] # DelVar(L1)
+	set_dim(L1, dim(L2))  # ECC buffer
+	for I in For(S,E):
+		B = L_CW[I]
+		F = .5*sum(L3*(1==abs(int(2*fPart(complex(L1[1],B)/L3)))))
+		L1 = delta_list(cumSum(L1))
+		L1[1 + dim(L1)] = 0
+		for J in For(1,(F!=0)*dim(L2)):
+			Ans = L_GFL[L2[J]] + L_GFL[F]
+			L1[J] = .5*sum(L3*(1==abs(int(2*fPart(complex(L1[J],L_GFX[1+Ans-255*(Ans>254)])/L3)))))
 
-print('ECC:', L1)
-L_CW = augment(L_CW,L1)
+if V<=5:
+	S = 1
+	E = dim(L_CW)
+	prgmQRECC()
+	L_CW = augment(L_CW,L1)
+elif V==10:
+	pass
+elif V==11:
+	S = 1
+	E = 81
+	prgmQRECC()
+	L4 = copy_list(L1)
+	S = 82
+	E = 162
+	prgmQRECC()
+	L5 = copy_list(L1)
+	S = 163
+	E = 243
+	prgmQRECC()
+	L6 = copy_list(L1)
+	S = 244
+	E = 324
+	prgmQRECC()
+	L_CW = augment(
+		seq(
+			not_(fPart(N))*L_CW[int(N)]
+			+(fPart(N)==.25)*L_CW[81+int(N)]
+			+(fPart(N)==.5)*L_CW[162+int(N)]
+			+(fPart(N)==.75)*L_CW[243+int(N)]
+			for N in For(1,81.75,.25)
+		),
+		seq(
+			not_(fPart(N))*L4[int(N)]
+			+(fPart(N)==.25)*L5[int(N)]
+			+(fPart(N)==.5)*L6[int(N)]
+			+(fPart(N)==.75)*L1[int(N)]
+			for N in For(1,dim(L1)+.75,.25)
+		)
+	)
+else:
+	H = .5*dim(L_CW)
+	S = 1
+	E = H
+	prgmQRECC()
+	L4 = copy_list(L1)
+	S = H+1
+	E = 2*H
+	prgmQRECC()
+	L_CW = augment(
+		seq(
+			not_(fPart(N))*L_CW[int(N)]
+			+2*fPart(N)*L_CW[H+int(N)]
+			for N in For(1,H+.5,.5)
+		),
+		seq(
+			not_(fPart(N))*L4[int(N)]
+			+2*fPart(N)*L1[int(N)]
+			for N in For(1,dim(L1)+.5,.5)
+		)
+	)
+
 
 # Always pad
 L_CW[1+dim(L_CW)] = 0
 
 print('CW: ', L_CW)
+print('TI-PY RESULT:')
 print(L_CW.hex())
+
+
+#  ?;',!
+#  $%*+/
 
 check = list(qr.get_codewords((Str1.translate(str.maketrans(";!,'?", "$%*+/")) if E else Str1).encode(), V, 'a' if E else 'b'))
 if check == L_CW.inner:
 	print('CORRECT!')
 else:
+	print('REAL RESULT:')
 	print(' '.join(f"{b:02X}" for b in check))
 	print('!!! INCORRECT !!!')
