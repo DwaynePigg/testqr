@@ -399,7 +399,8 @@ def prgmBITBUF():
 
 if E:
 
-	Str2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ ;!,'-.?:"
+	#                                            $%*+-./:
+	Str2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ ?;',-.!:"
 	L = 4
 	L_CW = L_[32]
 	S = 9+2*(V>=10)
@@ -450,7 +451,6 @@ def prgmQRECC():
 	L1 = L_[()] # DelVar(L1)
 	set_dim(L1, dim(L2))  # ECC buffer
 	Ans = seq(L_CW[I] for I in For(M,N))
-	# print('TI-BLOCK', dim(Ans), list(Ans))
 	for I in For(M,N):
 		B = L_CW[I]
 		F = .5*sum(L3*(1==abs(int(2*fPart(complex(L1[1],B)/L3)))))
@@ -557,15 +557,12 @@ else:
 # Always pad
 L_CW[1+dim(L_CW)] = 0
 
-print('CW: ', L_CW)
+print('CW:', L_CW)
 print('TI-PY RESULT:')
 print(L_CW.hex())
 
 
-#  ?;',!
-#  $%*+/
-
-check = list(qr.get_codewords((Str1.translate(str.maketrans(";!,'?", "$%*+/")) if E else Str1).encode(), V, 'a' if E else 'b'))
+check = list(qr.get_codewords((Str1.translate(str.maketrans("?;',!", "$%*+/")) if E else Str1).encode(), V, 'a' if E else 'b'))
 if check == L_CW.inner:
 	print('CORRECT!')
 else:

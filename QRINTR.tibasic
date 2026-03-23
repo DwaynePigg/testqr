@@ -1,0 +1,39 @@
+If V<=5
+Then
+	1->M:dim(|LCW->N
+	prgmQRECC()
+	augment(|LCW,L1->CW
+Else
+	If V=10
+	Then
+		1->M:68->N
+		prgmQRECC:L1->L4
+		69->M:136->N
+		prgmQRECC:L1->L5
+		137->M:205->N
+		prgmQRECC:L1->L6
+		206->M:274->N
+		prgmQRECC
+		augment(seq(not(fPart(N))|LCW(int(N))+(fPart(N)=.25)|LCW(68+int(N))+(fPart(N)=.5)|LCW(136+int(N))+(fPart(N)=.75)|LCW(205+int(N)),N,1,68.75,.25),augment({|LCW(205),|LCW(274)},seq(not(fPart(N))L4(int(N))+(fPart(N)=.25)L5(int(N))+(fPart(N)=.5)L6(int(N))+(fPart(N)=.75)L1(int(N)),N,1,dim(L1)+.75,.25->CW
+	Else
+		If V=11
+		Then
+			1->M:81->N
+			prgmQRECC:L1->L4
+			82->M:162->N
+			prgmQRECC:L1->L5
+			163->M:243->N
+			prgmQRECC:L1->L6
+			244->M:324->N
+			prgmQRECC
+			augment(seq(not(fPart(N))|LCW(int(N))+(fPart(N)=.25)|LCW(81+int(N))+(fPart(N)=.5)|LCW(162+int(N))+(fPart(N)=.75)|LCW(243+int(N)),N,1,81.75,.25),seq(not(fPart(N))L4(int(N))+(fPart(N)=.25)L5(int(N))+(fPart(N)=.5)L6(int(N))+(fPart(N)=.75)L1(int(N)),N,1,dim(L1)+.75,.25->CW
+		Else
+			.5dim(|LCW->H
+			1->M:H->N
+			prgmQRECC:L1->L4
+			H+1->M:2H->N
+			prgmQRECC
+			augment(seq(not(fPart(N))|LCW(int(N))+2fPart(N)|LCW(H+int(N)),N,1,H+.5,.5),seq(not(fPart(N))L4(int(N))+2fPart(N)L1(int(N)),N,1,dim(L1)+.5,.5)->CW
+		End
+	End
+End
