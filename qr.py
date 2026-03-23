@@ -341,6 +341,8 @@ def zip_skip(*iterables):
 
 
 def interleave(blocks, rs_poly):
+	# for block in blocks:
+		# print('QR-BLOCK', len(block), list(block))
 	codewords = bytearray()
 	for col in zip_skip(*blocks):
 		codewords.extend(col)

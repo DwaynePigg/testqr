@@ -31,7 +31,7 @@ class TIList:
 		return len(self.inner)
 	
 	def __iter__(self):
-		return iter(self.inner)
+		return (int(i) if int(i) == i else i for i in self.inner)
 	
 	def __repr__(self):
 		return f"{{{','.join(repr(int(i) if int(i) == i else i) for i in self)}}}"
@@ -204,8 +204,8 @@ def cumSum(lst):
 def delta_list(lst):
 	return TIList([b - a for a, b in pairwise(lst)])
 
-def augment(*args):
-	return TIList(chain.from_iterable(args))
+def augment(lst1, lst2):
+	return TIList(chain(lst1, lst2))
 
 @vectorized
 def real(num):
@@ -288,18 +288,28 @@ def DelVar(v):
 
 # Stop()
 
+MSG = "Suq'Ata Firewalker; Sigil of Sleep; Barrin, Master Wizard; Voidmage Apprentice; Rayne, Academy Chancellor; Ertai, Wizard Adept; Imagecrafter; Stern Proctor; Riptide Survivor; Thalakos Dreamsower; Thalakos Deceiver; Keeper of the Mind; Riptide Director; Ice Floe; 01234567"
 
-Str1 = "ATTACK AT DAWN!"
-E = 1
+import argparse
+import builtins
+parser = argparse.ArgumentParser()
+parser.add_argument('-v', default=0, type=builtins.int)
+parser.add_argument('-m', default=MSG)
+parser.add_argument('-e', default=1, type=builtins.int)
+args = parser.parse_args()
 
-if E:
-	# Alphanumeric Mode
-	Ans = L_[25,47,77,114,154,195,224,279,335,395,468]
-else:
-	Ans = L_[17,32,53,78,106,134,154,192,230,271,321]
+Str1 = args.m
+E = args.e
+V = args.v
 
-V = 1+sum(Ans<length(Str1))
-V = 11
+if not_(V):
+	if E:
+		# Alphanumeric Mode
+		Ans = L_[25,47,77,114,154,195,224,279,335,395,468]
+	else:
+		Ans = L_[17,32,53,78,106,134,154,192,230,271,321]
+
+	V = 1+sum(Ans<length(Str1))
 
 if V>11:
 	Disp("Message too long")
@@ -310,7 +320,7 @@ print('Version:', V)
 L_GFL = L_[0,1,25,2,50,26,198,3,223,51,238,27,104,199,75,4,100,224,14,52,141,239,129,28,193,105,248,200,8,76,113,5,138,101,47,225,36,15,33,53,147,142,218,240,18,130,69,29,181,194,125,106,39,249,185,201,154,9,120,77,228,114,166,6,191,139,98,102,221,48,253,226,152,37,179,16,145,34,136,54,208,148,206,143,150,219,189,241,210,19,92,131,56,70,64,30,66,182,163,195,72,126,110,107,58,40,84,250,133,186,61,202,94,155,159,10,21,121,43,78,212,229,172,115,243,167,87,7,112,192,247,140,128,99,13,103,74,222,237,49,197,254,24,227,165,153,119,38,184,180,124,17,68,146,217,35,32,137,46,55,63,209,91,149,188,207,205,144,135,151,178,220,252,190,97,242,86,211,171,20,42,93,158,132,60,57,83,71,109,65,162,31,45,67,216,183,123,164,118,196,23,73,236,127,12,111,246,108,161,59,82,41,157,85,170,251,96,134,177,187,204,62,90,203,89,95,176,156,169,160,81,11,245,22,235,122,117,44,215,79,174,213,233,230,231,173,232,116,214,244,234,168,80,88,175]  # original list is undefined at 0. I removed element 0 here, so this list is kind of 0-indexed now
 L_GFX = L_[1,2,4,8,16,32,64,128,29,58,116,232,205,135,19,38,76,152,45,90,180,117,234,201,143,3,6,12,24,48,96,192,157,39,78,156,37,74,148,53,106,212,181,119,238,193,159,35,70,140,5,10,20,40,80,160,93,186,105,210,185,111,222,161,95,190,97,194,153,47,94,188,101,202,137,15,30,60,120,240,253,231,211,187,107,214,177,127,254,225,223,163,91,182,113,226,217,175,67,134,17,34,68,136,13,26,52,104,208,189,103,206,129,31,62,124,248,237,199,147,59,118,236,197,151,51,102,204,133,23,46,92,184,109,218,169,79,158,33,66,132,21,42,84,168,77,154,41,82,164,85,170,73,146,57,114,228,213,183,115,230,209,191,99,198,145,63,126,252,229,215,179,123,246,241,255,227,219,171,75,150,49,98,196,149,55,110,220,165,87,174,65,130,25,50,100,200,141,7,14,28,56,112,224,221,167,83,166,81,162,89,178,121,242,249,239,195,155,43,86,172,69,138,9,18,36,72,144,61,122,244,245,247,243,251,235,203,139,11,22,44,88,176,125,250,233,207,131,27,54,108,216,173,71,142]
 
-L_RS7 = L_[127,122,154,164,11,68,117]	
+L_RS7 = L_[127,122,154,164,11,68,117]
 L_RS10 = L_[216,194,159,111,199,94,95,113,157,193]
 L_RS15 = L_[29,196,111,163,112,74,10,105,105,139,132,151,32,134,26]
 L_RS18 = L_[239,251,183,113,149,175,199,215,240,220,73,82,173,75,32,67,217,146]
@@ -436,10 +446,12 @@ print('MSG:', L_CW)
 L3 = seq(2 ** I for I in For(8,1,-1))  # Powers of 2 for fast XOR
 
 def prgmQRECC():
-	global L_CW, L1, L2, L3, S, E
+	global L_CW, L1, L2, L3, M, N
 	L1 = L_[()] # DelVar(L1)
 	set_dim(L1, dim(L2))  # ECC buffer
-	for I in For(S,E):
+	Ans = seq(L_CW[I] for I in For(M,N))
+	# print('TI-BLOCK', dim(Ans), list(Ans))
+	for I in For(M,N):
 		B = L_CW[I]
 		F = .5*sum(L3*(1==abs(int(2*fPart(complex(L1[1],B)/L3)))))
 		L1 = delta_list(cumSum(L1))
@@ -449,27 +461,59 @@ def prgmQRECC():
 			L1[J] = .5*sum(L3*(1==abs(int(2*fPart(complex(L1[J],L_GFX[1+Ans-255*(Ans>254)])/L3)))))
 
 if V<=5:
-	S = 1
-	E = dim(L_CW)
+	M = 1
+	N = dim(L_CW)
 	prgmQRECC()
 	L_CW = augment(L_CW,L1)
 elif V==10:
-	pass
-elif V==11:
-	S = 1
-	E = 81
+	M = 1
+	N = 68
 	prgmQRECC()
 	L4 = copy_list(L1)
-	S = 82
-	E = 162
+	M = 69
+	N = 136
 	prgmQRECC()
 	L5 = copy_list(L1)
-	S = 163
-	E = 243
+	M = 137
+	N = 205
 	prgmQRECC()
 	L6 = copy_list(L1)
-	S = 244
-	E = 324
+	M = 206
+	N = 274
+	prgmQRECC()
+	L_CW = augment(
+		seq(
+			not_(fPart(N))*L_CW[int(N)]
+			+(fPart(N)==.25)*L_CW[68+int(N)]
+			+(fPart(N)==.5)*L_CW[136+int(N)]
+			+(fPart(N)==.75)*L_CW[205+int(N)]
+			for N in For(1,68.75,.25)
+		), augment(
+			L_[L_CW[205], L_CW[274]],
+			seq(
+				not_(fPart(N))*L4[int(N)]
+				+(fPart(N)==.25)*L5[int(N)]
+				+(fPart(N)==.5)*L6[int(N)]
+				+(fPart(N)==.75)*L1[int(N)]
+				for N in For(1,dim(L1)+.75,.25)
+			)
+		)
+	)
+elif V==11:
+	M = 1
+	N = 81
+	prgmQRECC()
+	L4 = copy_list(L1)
+	M = 82
+	N = 162
+	prgmQRECC()
+	L5 = copy_list(L1)
+	M = 163
+	N = 243
+	prgmQRECC()
+	L6 = copy_list(L1)
+	M = 244
+	N = 324
 	prgmQRECC()
 	L_CW = augment(
 		seq(
@@ -489,12 +533,12 @@ elif V==11:
 	)
 else:
 	H = .5*dim(L_CW)
-	S = 1
-	E = H
+	M = 1
+	N = H
 	prgmQRECC()
 	L4 = copy_list(L1)
-	S = H+1
-	E = 2*H
+	M = H+1
+	N = 2*H
 	prgmQRECC()
 	L_CW = augment(
 		seq(
@@ -528,3 +572,6 @@ else:
 	print('REAL RESULT:')
 	print(' '.join(f"{b:02X}" for b in check))
 	print('!!! INCORRECT !!!')
+	for i, (b1, b2) in enumerate(zip(L_CW.inner, check)):
+		if b1 != b2:
+			print(i, b1, b2)
