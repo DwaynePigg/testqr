@@ -1,7 +1,7 @@
 If V<=5
 Then
 	1->M:dim(|LCW->N
-	prgmQRECC()
+	prgmQRECC
 	augment(|LCW,L1->CW
 Else
 	If V=10
