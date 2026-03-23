@@ -11,7 +11,7 @@ import qr
 
 class TIList:
 
-	def __init__(self, data):
+	def __init__(self, data=()):
 		self.inner = list(data)
 	
 	def __getitem__(self, i):
@@ -43,6 +43,9 @@ class TIList:
 					raise ValueError(i)
 				yield f"{int(i):02X}"
 		return ' '.join(_iter())
+
+	def copy():
+		return TIList(list(self.inner))
 
 
 def and_(a, b):
@@ -176,9 +179,6 @@ def set_dim(lst, new_dim):
 	elif new_dim > len(lst):
 		lst.inner.extend(0 for _ in range(new_dim - len(lst)))
 
-def copy_list(lst):
-	return TIList(list(_check_list(lst).inner))
-
 @vectorized
 def not_(num):
 	return int(not num)
@@ -255,8 +255,3 @@ def sub(s, start, length):
 	if not(1 <= start <= len(s) - length + 1):
 		raise ValueError(s, start, length)
 	return s[start - 1 : start - 1 + length]
-
-def DelVar(v):
-	if isinstance(v, TIList):
-		del v.inner[:]
-	raise ValueError(v)

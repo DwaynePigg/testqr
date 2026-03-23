@@ -181,7 +181,7 @@ L3 = seq(2 ** I for I in For(8,1,-1))  # Powers of 2 for fast XOR
 
 def prgmQRECC():
 	global L_CW, L1, L2, L3, M, N
-	L1 = L_[()] # DelVar(L1)
+	L1 = L_[()] # DelVar L1
 	set_dim(L1, dim(L2))  # ECC buffer
 	Ans = seq(L_CW[I] for I in For(M,N))
 	for I in For(M,N):
@@ -202,15 +202,15 @@ elif V==10:
 	M = 1
 	N = 68
 	prgmQRECC()
-	L4 = copy_list(L1)
+	L4 = L1.copy()
 	M = 69
 	N = 136
 	prgmQRECC()
-	L5 = copy_list(L1)
+	L5 = L1.copy()
 	M = 137
 	N = 205
 	prgmQRECC()
-	L6 = copy_list(L1)
+	L6 = L1.copy()
 	M = 206
 	N = 274
 	prgmQRECC()
@@ -236,15 +236,15 @@ elif V==11:
 	M = 1
 	N = 81
 	prgmQRECC()
-	L4 = copy_list(L1)
+	L4 = L1.copy()
 	M = 82
 	N = 162
 	prgmQRECC()
-	L5 = copy_list(L1)
+	L5 = L1.copy()
 	M = 163
 	N = 243
 	prgmQRECC()
-	L6 = copy_list(L1)
+	L6 = L1.copy()
 	M = 244
 	N = 324
 	prgmQRECC()
@@ -269,7 +269,7 @@ else:
 	M = 1
 	N = H
 	prgmQRECC()
-	L4 = copy_list(L1)
+	L4 = L1.copy()
 	M = H+1
 	N = 2*H
 	prgmQRECC()

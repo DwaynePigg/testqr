@@ -41,10 +41,6 @@ VERSION_INFO = [
 ]
 
 
-def skip_alignment(i, j, align_i, align_j):
-	return abs(i - align_i) <= 2 and abs(j - align_j) <= 2
-
-
 class QrCode:
 
 	def __init__(self, version):
@@ -151,29 +147,23 @@ class QrCode:
 		self.put_format()
 
 	def top_row(self, j):
-		return 9 if j < 9 or j > self.size - 9 else 0
+		return 9 * (j < 9 or j > self.size - 9)
 
 	def bottom_row(self, j):
-		return self.size - 9 if j < 9 else self.size - 1
+		return self.size - 1 - 8 * (j < 9)
 
 	def skip1(self, i, j):
 		return i == 6
 
-	def skip2(self, i, j):	
-		return i == 6 or skip_alignment(i, j, self.size - 7, self.size - 7)
+	def skip2(self, i, j):
+		return i == 6 or abs(i - self.size + 7) <= 2 and abs(j - self.size + 7) <= 2
 
 	def skip7(self, i, j):
-		middle = 6 + (self.size - 13) // 2
-		return (
-			i == 6
-			or skip_alignment(i, j, 6, middle)
-			or skip_alignment(i, j, middle, 6)
-			or skip_alignment(i, j, middle, middle)
-			or skip_alignment(i, j, middle, self.size - 7)
-			or skip_alignment(i, j, self.size - 7, middle)
-			or skip_alignment(i, j, self.size - 7, self.size - 7)
-			or self.size - 11 <= i <= self.size - 9 and 0 <= j <= 5
-			or self.size - 11 <= j <= self.size - 9 and 0 <= i <= 5
+		dist = 2 * self.version + 2
+		return (i == 6
+			or abs((i - 4) % dist) <= 4 and abs((j - 4) % dist) <= 4 and (abs(i - j) <= self.size / 2 - 2)
+			or i >= self.size - 11 and j <= 5
+			or j >= self.size - 11 and i <= 5
 		)
 
 	def put_codewords(self, codewords):
@@ -409,6 +399,7 @@ def generate(message, version, encoding):
 
 if __name__ == '__main__':
 	import argparse
+	import sys
 	from bisect import bisect_left
 	from pathlib import Path
 
@@ -417,6 +408,19 @@ if __name__ == '__main__':
 	parser.add_argument('-v', '--version', type=int)
 	parser.add_argument('-e', '--encoding')
 	args, tokens = parser.parse_known_args()
+	
+	# qr = QrCode(args.version)
+	
+	# # qr.setup()
+	
+	# for i in range(qr.size):
+		# for j in range(qr.size):
+			# if not qr.skip7(i, j):
+				# qr.pxl_on(i, j)
+	
+	# qr.disp()
+
+	# sys.exit()
 	
 	if tokens and args.input:
 		parser.error(f"Received input file and message args")
