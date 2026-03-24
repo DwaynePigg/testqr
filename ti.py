@@ -115,7 +115,9 @@ def prgmBITBEF():
 def prgmBITBUF():
 	global L, L_CW, N, S
 	R = S
+	# WHICH ONE???
 	O = 8*fPart(L/8)
+	O = L-8*int(L/8)
 	if O:
 		T = min(L_[8-O,R])
 		L_CW[dim(L_CW)] = L_CW[dim(L_CW)]+2**T*fPart(int(N/2**(R-T))/2**T)*2**(8-O-T)
@@ -296,15 +298,15 @@ print(L_CW.hex())
 
 
 
-def skip1():
-	return I=6
+# def skip1():
+	# return I=6
 
-def skip2():
-	return I=6 or abs(i-S+7)<=2 and abs(J-S+7)<=2
+# def skip2():
+	# return I=6 or abs(i-S+7)<=2 and abs(J-S+7)<=2
 
-def skip7():
-	D = 2V+2
-	return I=6 or abs(D*fPart(I-4)/D))<=4 and abs(D*fPart(J-4)/D))<=4 and (abs(i-j)<=S/2-2) or I>=S-11 and J<=5 or J>=S-11 and I<=5
+# def skip7():
+	# D = 2*V+2
+	# return I=6 or abs(D*fPart(I-4)/D))<=4 and abs(D*fPart(J-4)/D))<=4 and (abs(i-j)<=S/2-2) or I>=S-11 and J<=5 or J>=S-11 and I<=5
 
 
 check = list(qr.get_codewords((Str1.translate(str.maketrans("?;',!", "$%*+/")) if E else Str1).encode(), V, 'a' if E else 'b'))

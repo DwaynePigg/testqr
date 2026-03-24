@@ -166,14 +166,18 @@ class QrCode:
 		return i == 6 or abs(i - self.size + 7) <= 2 and abs(j - self.size + 7) <= 2
 
 	def skip7(self, i, j):
-		d = 2 * self.version + 2
-		a = (i - 4) % d
-		b = round(d * fPart((i + d - 4) / d))
-		if a != b:
-			raise ValueError(a, b)
-		v = self.version
-		s = self.size
-		return i==6 or d*fPart((i+2*v-2)/d)<=4.1 and d*fPart((j+2*v-2)/d)<=4.1 and (abs(i-j)<=s/2-2) or i>=s-11 and j<=5 or j>=s-11 and i<=5
+		Ans = 2 * self.version + 2
+		S = self.size
+		I = i
+		J = j
+		return I==6 or abs(Ans*fPart(I/Ans)-6)<=2.1 and abs(Ans*fPart(J/Ans)-6)<=2.1 and (abs(I-J)<=S/2-2) or I>=S-11 and J<=5 or j>=S-11 and I<=5
+		
+		dist = 2 * self.version + 2
+		return (i == 6
+			or (i - 4) % dist <= 4 and (j - 4) % dist <= 4 and (abs(i - j) <= self.size / 2 - 2)
+			or i >= self.size - 11 and j <= 5
+			or j >= self.size - 11 and i <= 5
+		)
 
 	def put_codewords(self, codewords):
 		i = self.size - 1
