@@ -16,14 +16,14 @@
 * actually 68x2 + 69x2
 
 
-| Layout             | v.1 | v.2-6 | v.7+ |
-| -----------------  | --- | ----- | ---- |
-| Alignment patterns |  0  |   1   |  6   |
-| Remainder bits     |  0  |   7   |  0   |
-| Version info block |  N  |   N   |  Y   |
+| Version            |   1   |  2-6  |  7+   |
+| -----------------  | ----- | ----- | ----- |
+| Alignment patterns |   0   |   1   |   6   |
+| Remainder bits     |   0   |   7   |   0   |
+| Version info block |   N   |   N   |   Y   |
 
 
-| Length bits  | v.1-9 | v.10+ |
+| Length bits  |  1-9  |  10+  |
 | ------------ | ----- | ----- |
 | Alphanumeric |   9   |  11   |
 | Byte         |   8   |  16   |

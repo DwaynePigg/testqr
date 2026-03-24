@@ -297,6 +297,16 @@ print('TI-PY RESULT:')
 print(L_CW.hex())
 
 
+def prgmQRVER():
+	global L_CW
+	Ans = dim(L_CW)
+	int(sqrt(8*Ans+249)/4-4+(Ans>172))
+
+def prgmQRVER2():
+	global L_CW
+	Ans = dim(L_CW)
+	int(sqrt(8*Ans+400)/4-4-(Ans=26))
+
 
 # def skip1():
 	# return I=6

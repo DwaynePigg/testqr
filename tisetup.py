@@ -70,6 +70,7 @@ for name, op in [
 	('__rtruediv__', lambda a, b: b / a),
 	('__pow__', pow),
 	('__rpow__', lambda a, b: b ** a),
+	('__round__', round),
 	('__and__', and_),
 	('__rand__', and_),
 	('__or__', or_),
@@ -94,12 +95,11 @@ for name, op in [
 for name, op in [
 	('__neg__', operator.neg),
 	('__abs__', abs),
-	('__round__', round),
 	('__trunc__', math.trunc),
 ]:
 	def list_op(self, op=op):
 		return TIList(op(a) for a in self)
-
+	
 	setattr(TIList, name, list_op)
 
 
@@ -197,6 +197,11 @@ def int(num):
 @handle_complex
 def fPart(num):
 	return num - math.trunc(num)
+
+@vectorized
+@handle_complex
+def sqrt(num):
+	return math.sqrt(num)
 
 def cumSum(lst):
 	return TIList(accumulate(_check_list(lst)))

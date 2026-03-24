@@ -33,6 +33,7 @@ AN_TABLE = { a: i for i, a in enumerate(ALPHANUMERIC) }
 
 FORMAT_L0 = 0b111011111000100
 
+VERSION_INFO = [31892, 34236, 39577, 42195, 48118]
 VERSION_INFO = [
 	0b000111110010010100,
 	0b001000010110111100,
@@ -132,9 +133,10 @@ class QrCode:
 	def put_version_info(self):
 		bits = VERSION_INFO[self.version - 7]
 		for i in range(18):
-			b = (bits >> i) & 1
-			self.pxl_on(self.size - 11 + (i % 3), i // 3, b)
-			self.pxl_on(i // 3, self.size - 11 + (i % 3), b)
+			if fPart(bits/2):
+				self.pxl_on(self.size - 11 + (i % 3), i // 3)
+				self.pxl_on(i // 3, self.size - 11 + (i % 3))
+			bits //=2
 	
 	def setup(self):
 		self.put_position(0, 0)
@@ -163,6 +165,11 @@ class QrCode:
 		return i == 6
 
 	def skip2(self, i, j):
+		S = self.size
+		I = i
+		J = j
+		return i==6 or abs(I-S+7)<=2 and abs(J-S+7)<=2
+
 		return i == 6 or abs(i - self.size + 7) <= 2 and abs(j - self.size + 7) <= 2
 
 	def skip7(self, i, j):
@@ -420,20 +427,18 @@ if __name__ == '__main__':
 	parser.add_argument('-i', '--input', type=Path)
 	parser.add_argument('-v', '--version', type=int)
 	parser.add_argument('-e', '--encoding')
+	parser.add_argument('-s', '--skip', action='store_true')
 	args, tokens = parser.parse_known_args()
-	
-	qr = QrCode(args.version)
-	
-	# qr.setup()
-	
-	for i in range(qr.size):
-		for j in range(qr.size):
-			if not qr.skip7(i, j):
-				qr.pxl_on(i, j)
-	
-	qr.disp()
 
-	sys.exit()
+	if args.skip:
+		qr = QrCode(args.version)
+		# qr.setup()
+		for i in range(qr.size):
+			for j in range(qr.size):
+				if not qr.skip7(i, j):
+					qr.pxl_on(i, j)
+		qr.disp()
+		sys.exit()
 	
 	if tokens and args.input:
 		parser.error(f"Received input file and message args")
