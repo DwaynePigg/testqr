@@ -166,16 +166,14 @@ class QrCode:
 		return i == 6 or abs(i - self.size + 7) <= 2 and abs(j - self.size + 7) <= 2
 
 	def skip7(self, i, j):
-		dist = 2 * self.version + 2
-		a = (i - 4) % dist
-		b = round(dist * fPart((i + dist - 4) / dist))
+		d = 2 * self.version + 2
+		a = (i - 4) % d
+		b = round(d * fPart((i + d - 4) / d))
 		if a != b:
 			raise ValueError(a, b)
-		return (i == 6
-			or dist * fPart((i+2*self.version-2) / dist) <= 4.01 and dist * fPart((j+2*self.version-2) / dist) <= 4.01 and (abs(i - j) <= self.size / 2 - 2)
-			or i >= self.size - 11 and j <= 5
-			or j >= self.size - 11 and i <= 5
-		)
+		v = self.version
+		s = self.size
+		return i==6 or d*fPart((i+2*v-2)/d)<=4.1 and d*fPart((j+2*v-2)/d)<=4.1 and (abs(i-j)<=s/2-2) or i>=s-11 and j<=5 or j>=s-11 and i<=5
 
 	def put_codewords(self, codewords):
 		i = self.size - 1
@@ -420,18 +418,18 @@ if __name__ == '__main__':
 	parser.add_argument('-e', '--encoding')
 	args, tokens = parser.parse_known_args()
 	
-	# qr = QrCode(args.version)
+	qr = QrCode(args.version)
 	
-	# # qr.setup()
+	# qr.setup()
 	
-	# for i in range(qr.size):
-		# for j in range(qr.size):
-			# if not qr.skip7(i, j):
-				# qr.pxl_on(i, j)
+	for i in range(qr.size):
+		for j in range(qr.size):
+			if not qr.skip7(i, j):
+				qr.pxl_on(i, j)
 	
-	# qr.disp()
+	qr.disp()
 
-	# sys.exit()
+	sys.exit()
 	
 	if tokens and args.input:
 		parser.error(f"Received input file and message args")
