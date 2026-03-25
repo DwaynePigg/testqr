@@ -185,7 +185,6 @@ def prgmQRECC():
 	global L_CW, L1, L2, L3, M, N
 	L1 = L_[()] # DelVar L1
 	set_dim(L1, dim(L2))  # ECC buffer
-	Ans = seq(L_CW[I] for I in For(M,N))
 	for I in For(M,N):
 		B = L_CW[I]
 		F = .5*sum(L3*(1==abs(int(2*fPart(complex(L1[1],B)/L3)))))
