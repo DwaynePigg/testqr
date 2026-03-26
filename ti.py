@@ -365,6 +365,8 @@ Pxl_On(S-3,8)
 Pxl_On(S-2,8)
 Pxl_On(S-1,8)
 
+"ALIGNMENT"
+
 if V>1:
 	if V<=6:
 		L1 = L_[S-7]
@@ -382,8 +384,6 @@ if V>1:
 		M = 6+.5*S-6.5
 		L1 = L_[6,M,M,M,S-7,S-7]
 		L2 = L_[M,6,M,S-7,M,S-7]
-		print(L1)
-		print(L2)
 		
 	for X in For(1,dim(L1)):
 		K = L1[X]

@@ -85,7 +85,7 @@ Then
 				int(B/2->B
 			End
 		End
-		6+.5S-6.5->M
+		6+.5(S-13->M
 		{6,M,M,M,S-7,S-7->L1
 		{M,6,M,S-7,M,S-7->L2
 	End

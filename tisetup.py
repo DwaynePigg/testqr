@@ -283,7 +283,7 @@ def DispGraph():
 def screen_func(func):
 	@wraps(func)
 	def apply(row, col):
-		if row != _int(row) or col != _int(col) or not (0 <= row <= 95) or not (0 <= col < 63):
+		if row != _int(row) or col != _int(col) or not (0 <= row <= 95) or not (0 <= col <= 63):
 			raise ValueError(row, col)
 		func(_int(row), _int(col))
 	return apply
