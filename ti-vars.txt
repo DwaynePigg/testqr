@@ -1,0 +1,27 @@
+A: For loop (drawing)
+B: byte (ecc), byte (encoding)
+C: ascii char, alphanum char, column
+D: direction (drawing)
+E: encoding, end (drawing)
+F: factor (galois); padding
+G
+H: current byte (drawing)
+I: For loops, coord
+J: coord
+K: alt I (drawing)
+L: alt J (drawing)
+M: message bits
+N: seq var
+O: offset (CW encoding)
+P: power of 2
+Q
+R: remainder (CW encoding)
+S: size (CW encoding)
+T: "take"
+U: temp
+V: version
+W
+X: codeword counter
+Y
+Z
+theta: timer
