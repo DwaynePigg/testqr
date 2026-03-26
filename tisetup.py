@@ -1,8 +1,9 @@
+import builtins
 import math
 import operator
 import sys
 from functools import wraps
-from itertools import accumulate, pairwise, chain, repeat
+from itertools import accumulate, pairwise, chain, repeat, batched
 from math import prod
 from numbers import Number
 
@@ -15,47 +16,47 @@ class TIList:
 		self.inner = list(data)
 	
 	def __getitem__(self, i):
-		if i != int(i) or not(1 <= i <= len(self)):
+		if i != _int(i) or not(1 <= i <= len(self)):
 			raise IndexError(f"{i=}")
-		return self.inner[int(i) - 1]
+		return self.inner[_int(i) - 1]
 	
 	def __setitem__(self, i, n):
 		if i == len(self) + 1:
 			self.inner.append(n)
-		elif i != int(i) or not(1 <= i <= len(self)):
+		elif i != _int(i) or not(1 <= i <= len(self)):
 			raise ValueError(f"out of bounds: {i}; dim: {len(self)}")
 		else:
-			self.inner[int(i) - 1] = n
+			self.inner[_int(i) - 1] = n
 	
 	def __len__(self):
 		return len(self.inner)
 	
 	def __iter__(self):
-		return (int(i) if int(i) == i else i for i in self.inner)
+		return (_int(i) if _int(i) == i else i for i in self.inner)
 	
 	def __repr__(self):
-		return f"{{{','.join(repr(int(i) if int(i) == i else i) for i in self)}}}"
+		return f"{{{','.join(repr(_int(i) if _int(i) == i else i) for i in self)}}}"
 	
 	def hex(self):
 		def _iter():
 			for i in self:
-				if int(i) != i:
+				if _int(i) != i:
 					raise ValueError(i)
-				yield f"{int(i):02X}"
+				yield f"{_int(i):02X}"
 		return ' '.join(_iter())
 
-	def copy():
+	def copy(self):
 		return TIList(list(self.inner))
 
 
 def and_(a, b):
-	return int(bool(a and b))
+	return _int(bool(a and b))
 
 def or_(a, b):
-	return int(bool(a or b))
+	return _int(bool(a or b))
 
 def xor(a, b):
-	return int(bool(a) ^ bool(b))
+	return _int(bool(a) ^ bool(b))
 
 
 for name, op in [
@@ -150,6 +151,11 @@ def handle_complex(func):
 	return apply
 
 
+@handle_complex
+def _int(num):
+	return builtins.int(num)
+
+
 def vectorized(func):
 	@wraps(func)
 	def apply(*args):
@@ -181,7 +187,7 @@ def set_dim(lst, new_dim):
 
 @vectorized
 def not_(num):
-	return int(not num)
+	return _int(not num)
 
 @vectorized 
 @handle_complex
@@ -260,3 +266,43 @@ def sub(s, start, length):
 	if not(1 <= start <= len(s) - length + 1):
 		raise ValueError(s, start, length)
 	return s[start - 1 : start - 1 + length]
+
+
+SCREEN = tuple(bytearray(96) for _ in range(64))
+
+def DispGraph():
+	print('▒' * 100)
+	for row1, row2 in batched(SCREEN, 2):
+		print('▒▒', end='')
+		for px1, px2 in zip(row1, row2, strict=True):
+			print(' ▀▄█'[~(px1 | (px2 << 1))], end='')
+		print('▒▒')
+	print('▒' * 100)
+
+
+def screen_func(func):
+	@wraps(func)
+	def apply(row, col):
+		if row != _int(row) or col != _int(col) or not (0 <= row <= 95) or not (0 <= col < 63):
+			raise ValueError(row, col)
+		func(_int(row), _int(col))
+	return apply
+
+@screen_func
+def Pxl_On(row, col):
+	SCREEN[row][col] = 1
+
+@screen_func
+def Pxl_Off(row, col):
+	SCREEN[row][col] = 0
+
+@screen_func
+def Pxl_Change(row, col):
+	SCREEN[row][col] ^ 1
+
+@screen_func
+def pxl_Test(row, col):
+	return SCREEN[row][col]
+
+def Pause():
+	input()

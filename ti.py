@@ -295,16 +295,10 @@ print('CW: ', L_CW)
 print('TI-PY RESULT:')
 print(L_CW.hex())
 
-
 def prgmQRVER():
 	global L_CW
 	Ans = dim(L_CW)
-	int(sqrt(8*Ans+249)/4-4+(Ans>172))
-
-def prgmQRVER2():
-	global L_CW
-	Ans = dim(L_CW)
-	int(sqrt(8*Ans+400)/4-4-(Ans=26))
+	int(sqrt(8*Ans+400)/4-4-(Ans==26))
 
 
 # def skip1():
@@ -317,6 +311,102 @@ def prgmQRVER2():
 	# D = 2*V+2
 	# return I=6 or abs(D*fPart(I-4)/D))<=4 and abs(D*fPart(J-4)/D))<=4 and (abs(i-j)<=S/2-2) or I>=S-11 and J<=5 or J>=S-11 and I<=5
 
+
+S = 17+4*V
+for X in For(1,3):
+	K = (S-7)*(X==3)
+	L = (S-7)*(X==2)
+	for J in For(L,L+5):
+		Pxl_On(K,J)
+	
+	for I in For(K,K+5):
+		Pxl_On(I,L+6)
+	
+	for J in For(L+6,L+1,-1):
+		Pxl_On(K+6,J)
+	
+	for I in For(K+6,K+1,-1):
+		Pxl_On(I,L)
+	
+	for I in For(K+2,K+4):
+		for J in For(L+2,L+4):
+			Pxl_On(I,J)
+
+"TIMING"
+
+for I in For(8,S-8):
+	if not_(fPart(I/2)):
+		Pxl_On(I,6)
+
+for J in For(8,S-8):
+	if not_(fPart(J/2)):
+		Pxl_On(6,J)
+
+Pxl_On(S-8,8)
+
+"FORMAT"
+
+Pxl_On(2,8)
+Pxl_On(7,8)
+Pxl_On(8,8)
+Pxl_On(8,7)
+Pxl_On(8,5)
+Pxl_On(8,4)
+Pxl_On(8,2)
+Pxl_On(8,1)
+Pxl_On(8,0)
+Pxl_On(8,S-3)
+Pxl_On(8,S-7)
+Pxl_On(8,S-8)
+Pxl_On(S-7,8)
+Pxl_On(S-6,8)
+Pxl_On(S-5,8)
+Pxl_On(S-3,8)
+Pxl_On(S-2,8)
+Pxl_On(S-1,8)
+
+if V>1:
+	if V<=6:
+		L1 = L_[S-7]
+		L2 = L_[S-7]
+	else:
+		Ans = L_[31892,34236,39577,42195,48118]
+		B = Ans[V-6]
+		for I in For(0,5):
+			for J in For(S-11,S-9):
+				if fPart(B/2):
+					Pxl_On(I,J)
+					Pxl_On(J,I)
+				B = int(B/2)
+
+		M = 6+.5*S-6.5
+		L1 = L_[6,M,M,M,S-7,S-7]
+		L2 = L_[M,6,M,S-7,M,S-7]
+		print(L1)
+		print(L2)
+		
+	for X in For(1,dim(L1)):
+		K = L1[X]
+		L = L2[X]
+		for J in For(L-2,L+1):
+			Pxl_On(K-2,J)
+		
+		for I in For(K-2,K+1):
+			Pxl_On(I,L+2)
+		
+		for J in For(L+2,L-1,-1):
+			Pxl_On(K+2,J)
+		
+		for I in For(K+2,K-1,-1):
+			Pxl_On(I,L-2)
+		
+		Pxl_On(K,L)
+	
+else:
+	pass
+
+
+DispGraph()
 
 check = list(qr.get_codewords((Str1.translate(str.maketrans("?;',!", "$%*+/")) if E else Str1).encode(), V, 'a' if E else 'b'))
 if check == L_CW.inner:

@@ -132,11 +132,12 @@ class QrCode:
 	
 	def put_version_info(self):
 		bits = VERSION_INFO[self.version - 7]
-		for i in range(18):
-			if fPart(bits/2):
-				self.pxl_on(self.size - 11 + (i % 3), i // 3)
-				self.pxl_on(i // 3, self.size - 11 + (i % 3))
-			bits //=2
+		for i in range(6):
+			for j in range(self.size - 11, self.size - 8):
+				if fPart(bits/2):
+					self.pxl_on(i, j)
+					self.pxl_on(j, i)
+				bits //= 2
 	
 	def setup(self):
 		self.put_position(0, 0)
@@ -156,10 +157,10 @@ class QrCode:
 		self.put_format()
 
 	def top_row(self, j):
-		return 9 * (j < 9 or j > self.size - 9)
+		return 9 * (j < 9 or j > self.size - 9) + 7 * (j == self.size - 9 and self.version >= 7)
 
 	def bottom_row(self, j):
-		return self.size - 1 - 8 * (j < 9)
+		return self.size - 1 - 8 * (j < 9) - 3 * (j <= 5 and self.version >= 7)
 
 	def skip1(self, i, j):
 		return i == 6
@@ -174,19 +175,21 @@ class QrCode:
 
 	def skip7(self, i, j):
 		Ans = 2 * self.version + 2
-		S = self.size
-		I = i
-		J = j
-		return I==6 or abs(Ans*fPart(I/Ans)-6)<=2.1 and abs(Ans*fPart(J/Ans)-6)<=2.1 and (abs(I-J)<=S/2-2) or I>=S-11 and J<=5 or j>=S-11 and I<=5
+		# S = self.size
+		# I = i
+		# J = j
+		# return I==6 or abs(Ans*fPart(I/Ans)-6)<=2.1 and abs(Ans*fPart(J/Ans)-6)<=2.1 and (abs(I-J)<=S/2-2) or I>=S-11 and J<=5 or J>=S-11 and I<=5
 		
 		dist = 2 * self.version + 2
-		return (i == 6
-			or (i - 4) % dist <= 4 and (j - 4) % dist <= 4 and (abs(i - j) <= self.size / 2 - 2)
-			or i >= self.size - 11 and j <= 5
-			or j >= self.size - 11 and i <= 5
+		return (i == 6 or (i - 4) % dist <= 4 and (j - 4) % dist <= 4 and (abs(i - j) <= self.size / 2 - 2)
+			# or i >= self.size - 11 and j <= 5
+			# or j >= self.size - 11 and i <= 5
+			or j == self.size - 11 and i <= 5
 		)
+		
 
 	def put_codewords(self, codewords):
+		checks = 0
 		i = self.size - 1
 		col = self.size - 1
 		d = -1
@@ -197,6 +200,7 @@ class QrCode:
 		
 		while col > 0:
 			for j in (col, col - 1):
+				checks += 1
 				if not self.skip(i, j):
 					
 					# no-bitwise mode
@@ -220,6 +224,8 @@ class QrCode:
 					i, end = end, i
 			else:
 				i += d
+		
+		print(f"{checks=}")
 
 	def __eq__(self, other):
 		return isinstance(other, QrCode) and self.matrix == other.matrix
@@ -428,18 +434,12 @@ if __name__ == '__main__':
 	parser.add_argument('-v', '--version', type=int)
 	parser.add_argument('-e', '--encoding')
 	parser.add_argument('-s', '--skip', action='store_true')
+	parser.add_argument('-f', '--fill', type=int)
+	parser.add_argument('-p', '--setup', action='store_true')
 	args, tokens = parser.parse_known_args()
+	version = args.version
+	encoding = args.encoding
 
-	if args.skip:
-		qr = QrCode(args.version)
-		# qr.setup()
-		for i in range(qr.size):
-			for j in range(qr.size):
-				if not qr.skip7(i, j):
-					qr.pxl_on(i, j)
-		qr.disp()
-		sys.exit()
-	
 	if tokens and args.input:
 		parser.error(f"Received input file and message args")
 	
@@ -449,8 +449,6 @@ if __name__ == '__main__':
 	else:
 		message = ' '.join(tokens).encode('utf-8')
 		
-	version = args.version
-	encoding = args.encoding
 	if encoding is None:
 		a_set = frozenset(ALPHANUMERIC)
 		# all(0x7fffffe07ffec3100000000 & (1<<ord(a)) for a in message)
@@ -464,5 +462,26 @@ if __name__ == '__main__':
 		if index == len(table):
 			parser.error(f"Message too long ({len(message)})")
 		version = index + 1
+
+	if args.skip or args.setup:
+		qr = QrCode(version)
+		if args.setup:
+			qr.setup()
+		if args.skip:
+			for i in range(qr.size):
+				for j in range(qr.size):
+					if not qr.skip(i, j):
+						qr.pxl_on(i, j)
+		qr.disp()
+		sys.exit()
+	
+	if args.fill:
+		qr = QrCode(version)
+		qr.setup()
+		def mask0(i, j):
+			return 0
+		qr.put_codewords(bytes([0xFF] * args.fill))
+		qr.disp()
+		sys.exit()
 	
 	generate(message, version, encoding)

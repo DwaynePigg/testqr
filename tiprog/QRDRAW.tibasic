@@ -27,50 +27,6 @@ For(X,1,3
 	End
 End
 
-"ALIGNMENT
-
-
-If V>1
-Then
-	If V<=6
-	Then
-		{S-9->L1
-		{S-9->L2
-	Else
-		{31892,34236,39577,42195,48118
-		Ans(V-8->B
-		For(X,0,17
-			If fPart(B/2
-			Then
-				int(X/3
-				Pxl-On(S-ll+X-3Ans,Ans
-				Pxl-On(Ans,S-ll+X-3Ans
-			End
-			int(B/2->B
-		End
-		8+int(7.5S->M
-		{4,M,M,M,S-9,S-9->L1
-		{M,4,M,S-9,M,S-9->L2
-	End
-	For(X,1,dim(L1
-		L1(X->K
-		L2(X->L
-		For(J,L,L+3
-			Pxl-On(K,J
-		End
-		For(I,K,K+3
-			Pxl-On(I,28
-		End
-		For(J,L+4,L+1,~1
-			Pxl-On(K+4,J
-		End
-		For(I,K+4,K-1,~1
-			Pxl-On(I,L+4
-		End
-		Pxl-On(K+2,L+2
-	End
-End
-
 "TIMING
 
 For(I,8,S-8
@@ -105,6 +61,55 @@ Pxl-On(S-3,8
 Pxl-On(S-2,8
 Pxl-On(S-1,8
 
+"ALIGNMENT
+
+If V>1
+Then
+	If V<=6
+	Then
+		"I=6 or abs(I-S+7)<=2 and abs(J-S+7)<=2->Y1
+		{S-7->L1
+		{S-7->L2
+	Else
+		2V-2->D
+		"I=6 or abs(DfPart(I/D)-6)<=2.1 and abs(DfPart(J/D)-6)<=2.1 and (abs(I-J)<=S/2-2) or I>=S-11 and J<=5 or J>=S-11 and I<=5->Y1
+		{31892,34236,39577,42195,48118
+		Ans(V-6->B
+		For(I,0,5:
+			For(J,S-11,S-9
+				If fPart(B/2
+				Then
+					Pxl-On(I,J
+					Pxl-On(J,I
+				End
+				int(B/2->B
+			End
+		End
+		6+.5S-6.5->M
+		{6,M,M,M,S-7,S-7->L1
+		{M,6,M,S-7,M,S-7->L2
+	End
+	For(X,1,dim(L1
+		L1(X->K
+		L2(X->L
+		For(J,L-2,L+1
+			Pxl-On(K-2,J
+		End
+		For(I,K-2,K+1
+			Pxl-On(I,L+2
+		End
+		For(J,L+2,L-1,~1
+			Pxl-On(K+2,J
+		End
+		For(I,K+2,K-1,~1
+			Pxl-On(I,L+2
+		End
+		Pxl-On(K,L
+	End
+Else
+	"I=6->Y1
+End
+
 "CODEWORDS
 
 S-1->I
@@ -116,7 +121,7 @@ S-1->C
 128->P
 While C>0
 	For(J,C,C-1,~1
-		If not(I=6 or abs(I-26)<=2 and abs(J-26)<=2
+		If not(Y1
 		Then
 			H>=P->B
 			H-BP->H
@@ -135,8 +140,8 @@ While C>0
 	Then
 		~D->D
 		C-2-(C=8->C
-		9(C<9 or C>24->I
-		32-8(C<9->E
+		9(C<9 or C>(S-9->I
+		S-1-8(C<9->E
 		If D=~1
 		Then
 			I->U
