@@ -185,6 +185,8 @@ class QrCode:
 		# print('NAYUKI')
 		# print(' '.join(f"{b:02X}" for b in bytes(datacodewords)))
 		allcodewords: bytes = self._add_ecc_and_interleave(bytearray(datacodewords))
+		# PERSONAL EDIT:
+		self.codewords = allcodewords
 		self._draw_codewords(allcodewords)
 		
 		# Do masking

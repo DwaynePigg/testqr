@@ -7,8 +7,6 @@ from itertools import accumulate, pairwise, chain, repeat, batched
 from math import prod
 from numbers import Number
 
-import qr
-
 
 class TIList:
 
@@ -283,7 +281,7 @@ def DispGraph():
 def screen_func(func):
 	@wraps(func)
 	def apply(row, col):
-		if row != _int(row) or col != _int(col) or not (0 <= row <= 95) or not (0 <= col <= 63):
+		if row != _int(row) or col != _int(col) or not (0 <= row <= 62) or not (0 <= col <= 94):
 			raise ValueError(row, col)
 		func(_int(row), _int(col))
 	return apply
@@ -303,6 +301,10 @@ def Pxl_Change(row, col):
 @screen_func
 def pxl_Test(row, col):
 	return SCREEN[row][col]
+
+def ClrDraw():
+	global SCREEN
+	SCREEN = tuple(bytearray(96) for _ in range(64))
 
 def Pause():
 	input()

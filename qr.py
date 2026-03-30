@@ -157,7 +157,8 @@ class QrCode:
 		self.put_format()
 
 	def top_row(self, j):
-		return 9 * (j < 9 or j > self.size - 9) + 7 * (j == self.size - 9 and self.version >= 7)
+		return 9 * (j < 9 or j > self.size - 9)
+		# + 7 * (j == self.size - 9 and self.version >= 7)
 
 	def bottom_row(self, j):
 		return self.size - 1 - 8 * (j < 9) - 3 * (j <= 5 and self.version >= 7)
@@ -178,13 +179,12 @@ class QrCode:
 		# S = self.size
 		# I = i
 		# J = j
-		# return I==6 or abs(Ans*fPart(I/Ans)-6)<=2.1 and abs(Ans*fPart(J/Ans)-6)<=2.1 and (abs(I-J)<=S/2-2) or I>=S-11 and J<=5 or J>=S-11 and I<=5
+		# return I==6 or abs(Ans*fPart(I/Ans)-6)<=2.1 and abs(Ans*fPart(J/Ans)-6)<=2.1 and (abs(I-J)<=S/2-2) or J>=S-11 and I<=5
 		
 		dist = 2 * self.version + 2
-		return (i == 6 or (i - 4) % dist <= 4 and (j - 4) % dist <= 4 and (abs(i - j) <= self.size / 2 - 2)
-			# or i >= self.size - 11 and j <= 5
-			# or j >= self.size - 11 and i <= 5
-			or j == self.size - 11 and i <= 5
+		return (i == 6 or (i - 4) % dist <= 4 and (j - 4) % dist <= 4 and (abs(i - j) <= self.size / 2 - 2) or j >= self.size - 11 and i <= 5
+			# or i >= self.size - 11 and j <= 			
+			# or j == self.size - 11 and i <= 5
 		)
 		
 

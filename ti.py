@@ -7,6 +7,7 @@ parser.add_argument('-e', default=1, type=builtins.int)
 args = parser.parse_args()
 
 from tisetup import *
+from verify import verify
 
 
 # L1 = seq(range(16))
@@ -292,8 +293,8 @@ else:
 L_CW[1+dim(L_CW)] = 0
 
 print('CW: ', L_CW)
-print('TI-PY RESULT:')
-print(L_CW.hex())
+# print('TI-PY RESULT:')
+# print(L_CW.hex())
 
 def prgmQRVER():
 	global L_CW
@@ -371,6 +372,7 @@ if V>1:
 	if V<=6:
 		L1 = L_[S-7]
 		L2 = L_[S-7]
+		Y1 = lambda: I==6 or abs(I-S+7)<=2 and abs(J-S+7)<=2
 	else:
 		Ans = L_[31892,34236,39577,42195,48118]
 		B = Ans[V-6]
@@ -384,7 +386,10 @@ if V>1:
 		M = 6+.5*S-6.5
 		L1 = L_[6,M,M,M,S-7,S-7]
 		L2 = L_[M,6,M,S-7,M,S-7]
-		
+		T = 2*V+2
+		Y1 = lambda: I==6 or abs(T*fPart(I/T)-6)<=2.1 and abs(T*fPart(J/T)-6)<=2.1 and (abs(I-J)<=S/2-2) or J>=S-11 and I<=5
+		Y1 = lambda: I==6 or max((abs(I-L1)<=2) & (abs(J-L2)<=2)) or J>=S-11 and I<=5
+
 	for X in For(1,dim(L1)):
 		K = L1[X]
 		L = L2[X]
@@ -403,18 +408,46 @@ if V>1:
 		Pxl_On(K,L)
 	
 else:
-	pass
+	Y1 = lambda: I==6
 
+# ClrDraw()
+
+I = S-1
+C = S-1
+D = -1
+E = 9
+X = 1
+H = L_CW[1]
+P = 128
+while C>0:
+	for J in For(C,C-1,-1):
+		if not_(Y1()):
+			B = H>=P
+			H = H-B*P
+			P = P/2
+			if P<1:
+				P = 128
+				X = X+1
+				H = L_CW[X]
+			if xor(B, not(fPart((I+J)/2))):
+				Pxl_On(I,J)
+
+	if I==E:
+		D = -D
+		C = C-2-(C==8)
+		I = 9*(C<9 or C>(S-9))
+		E = S-1-8*(C<9)-3*(C<=5 and V>=7)
+		if D==-1:
+			U = I
+			I = E
+			E = U
+		
+	else:
+		I = D+I
+
+# DelVar Y0
 
 DispGraph()
+print(X, len(L_CW))
 
-check = list(qr.get_codewords((Str1.translate(str.maketrans("?;',!", "$%*+/")) if E else Str1).encode(), V, 'a' if E else 'b'))
-if check == L_CW.inner:
-	print('CORRECT!')
-else:
-	print('REAL RESULT:')
-	print(' '.join(f"{b:02X}" for b in check))
-	print('!!! INCORRECT !!!')
-	for i, (b1, b2) in enumerate(zip(L_CW.inner, check)):
-		if b1 != b2:
-			print(i, b1, b2)
+verify(args.m, args.v, args.e, L_CW.inner, SCREEN)
