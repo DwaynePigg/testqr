@@ -1,13 +1,32 @@
-AxesOff:GridOff:FnOff :PlotsOff 
+If V=1
+Then
+	"I=6->{Y0}
+Else
+	If V<=6
+	Then
+		"I=6 or abs(S-7-I)<=2 and abs(S-7-J)<=2->{Y0}
+	Else
+		"I=6 or abs(TfPart(I/T)-6)<=2.1 and abs(TfPart(J/T)-6)<=2.1 and abs(I-J)<=S/2-2 or J>=S-11 and I<=5->{Y0}
+	End
+End
+AxesOff
+GridOff
+FnOff 
+PlotsOff 
 ClrDraw
-
-17+4V->S
-
-"POSITION
-
+If |LQR(1
+Then
+	17+4V->S
+	.5(S-1
+	31-Ans->G
+	47-Ans->H
+Else
+	0->G
+	0->H
+End
 For(X,1,3
-	(S-7)(X=3->K
-	(S-7)(X=2->L
+	G+(S-7)(X=3->K
+	H+(S-7)(X=2->L
 	For(J,L,L+5
 		Pxl-On(K,J
 	End
@@ -26,57 +45,46 @@ For(X,1,3
 		End
 	End
 End
-
-"TIMING
-
-For(I,8,S-8
+For(I,G+8,G+S-8
 	If not(fPart(I/2
-	Pxl-On(I,6
+	Pxl-On(I,H+6
 End
-For(J,8,S-8
+For(J,H+8,H+S-8
 	If not(fPart(J/2
-	Pxl-On(6,J
+	Pxl-On(G+6,J
 End
-
-Pxl-On(S-8,8
-
-"FORMAT
-
-Pxl-On(2,8
-Pxl-On(7,8
-Pxl-On(8,8
-Pxl-On(8,7
-Pxl-On(8,5
-Pxl-On(8,4
-Pxl-On(8,2
-Pxl-On(8,1
-Pxl-On(8,0
-Pxl-On(8,S-3
-Pxl-On(8,S-7
-Pxl-On(8,S-8
-Pxl-On(S-7,8
-Pxl-On(S-6,8
-Pxl-On(S-5,8
-Pxl-On(S-3,8
-Pxl-On(S-2,8
-Pxl-On(S-1,8
-
-"ALIGNMENT
-
+Pxl-On(G+S-8,8
+G+8
+Pxl-On(Ans,H+8
+Pxl-On(Ans,H+7
+Pxl-On(Ans,H+5
+Pxl-On(Ans,H+4
+Pxl-On(Ans,H+2
+Pxl-On(Ans,H+1
+Pxl-On(Ans,H
+Pxl-On(Ans,H+S-3
+Pxl-On(Ans,H+S-7
+Pxl-On(Ans,H+S-8
+H+8
+Pxl-On(G+S-7,Ans
+Pxl-On(G+S-6,Ans
+Pxl-On(G+S-5,Ans
+Pxl-On(G+S-3,Ans
+Pxl-On(G+S-2,Ans
+Pxl-On(G+S-1,Ans
+Pxl-On(G+2,Ans
+Pxl-On(G+7,Ans
 If V>1
 Then
 	If V<=6
 	Then
-		"I=6 or abs(I-S+7)<=2 and abs(J-S+7)<=2->Y1
 		{S-7->L1
 		{S-7->L2
 	Else
-		2V-2->D
-		"I=6 or abs(DfPart(I/D)-6)<=2.1 and abs(DfPart(J/D)-6)<=2.1 and (abs(I-J)<=S/2-2) or I>=S-11 and J<=5 or J>=S-11 and I<=5->Y1
 		{31892,34236,39577,42195,48118
 		Ans(V-6->B
-		For(I,0,5:
-			For(J,S-11,S-9
+		For(I,G,G+5
+			For(J,H+S-11,H+S-9
 				If fPart(B/2
 				Then
 					Pxl-On(I,J
@@ -88,10 +96,11 @@ Then
 		6+.5(S-13->M
 		{6,M,M,M,S-7,S-7->L1
 		{M,6,M,S-7,M,S-7->L2
+		2V+2->T
 	End
 	For(X,1,dim(L1
-		L1(X->K
-		L2(X->L
+		G+L1(X->K
+		H+L2(X->L
 		For(J,L-2,L+1
 			Pxl-On(K-2,J
 		End
@@ -102,38 +111,33 @@ Then
 			Pxl-On(K+2,J
 		End
 		For(I,K+2,K-1,~1
-			Pxl-On(I,L+2
+			Pxl-On(I,L-2
 		End
 		Pxl-On(K,L
 	End
-Else
-	"I=6->Y1
 End
-
-"CODEWORDS
-
 S-1->I
-S-1->C
+I->C
 ~1->D
 9->E
 1->X
-|LCW(1->H
+|LCW(1->W
 128->P
 While C>0
 	For(J,C,C-1,~1
-		If not(Y1
+		If not({Y0}
 		Then
-			H>=P->B
-			H-BP->H
+			W>=P->B
+			H-BP->W
 			P/2->P
 			If P<1
 			Then
 				128->P
 				X+1->X
-				|LCW(X->H
+				|LCW(X->W
 			End
 			If B xor not(fPart((I+J)/2
-			Pxl-On(I,J
+			Pxl-On(G+I,H+J
 		End
 	End
 	If I=E
@@ -141,7 +145,7 @@ While C>0
 		~D->D
 		C-2-(C=8->C
 		9(C<9 or C>(S-9->I
-		S-1-8(C<9->E
+		S-1-8(C<9)-3(C<=5 and V>=7->E
 		If D=~1
 		Then
 			I->U
@@ -152,3 +156,6 @@ While C>0
 		D+I->I
 	End
 End
+If |LQR(2
+StorePic 1
+DelVar {Y0}

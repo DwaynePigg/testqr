@@ -1,0 +1,13 @@
+remove comments
+store pic?
+adjustable center
+ascii string
+real alphanumeric mode
+
+OPTIONS:
+................
+1:Center:    Y
+2:StorePic 1:N
+3:Alt Punct: N
+4:ASCII Fix: N
+X:Back
