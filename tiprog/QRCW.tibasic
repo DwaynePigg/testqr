@@ -52,8 +52,14 @@ Then
 	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "+sub("$%*+-./:?;',-.!:",1+8|LQR(4),8->Str2
 	If |LQR(2
 	Then
-		If min(seq(inString(Str2,sub(Str1,C,1)),C,1,N
-		Pause "WARNING
+		"Bad char:
+		For(X,1,N)
+			If not(inString(Str2,sub(Str1,X,1
+			Then
+				Ans+sub(Str1,X,1
+				Output(2,1,Ans
+			End
+		End
 	End
 	{32->CW
 	9+2(V>=10->S
