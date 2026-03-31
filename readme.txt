@@ -1,3 +1,24 @@
+QUICK GUIDE
+
+Choose ASCII from the main menu, type in your message, and wait about 1 to 20 minutes for the program to finish, depending on the length of your message. (See table below, but beware! You may start reading other technical details.) Then scan the code with your phone or something.
+
+Why would you potentially wait up to 20 minutes for your calculator to generate a QR code that you're just going to scan with your phone? I guess that's up to you, but my two main reasons are:
+1) It's cool.
+2) You can use this program in combination with other 
+
+
+ASCII MODE
+
+ALPHANUMERIC MODE
+
+BINARY MODE
+
+To use this mode, you must first store your binary data in list BIN (perhaps with the list editor) and then select Binary encoding. Unlike Alphanumeric and ASCII mode, Binary mode does not prompt you to input the data and assumes list BIN has already been set up.
+
+VERSIONS
+
+This program can create QR codes ranging from version 1 to 11.
+
 | Ver | Size | Binary | AlphaNum | ECC Time | Draw Time | Total Time | Char/sec |
 |   1 |   21 |     17 |       25 |      26s |       13s |        39s |     0.64 |
 |   2 |   25 |     32 |       47 |    1m01s |       27s |      1m28s |     0.53 |
@@ -31,3 +52,19 @@ Off by default. This is a weird feature that most people other than me probably 
 
 Off by default. Another kind of weird feature. You may be aware that, since the calculator has no escape metacharacter for strings, it's impossible to put a quotation mark in a string. Or is it? You can actually do it if you manually type in a string when prompted by the Input command within a program, or transfer the string directly to your calculator. But since we can't put do it programatically, I use the pi symbol in its place when initializing the string in this program. However, if you want to fix the ASCII string yourself (remember, we're only using characters 32 to 127), then turn this option on so that Str3 doesn't get overwritten. You can even come up with an entirely new character set if you want. Note that if Str3 doesn't contain exactly 95 characters (perhaps because a different program did something with it or you screwed up), then you'll be back to the old ASCII-with-pi character set. Why does this need to be an option at all, you might ask? Isn't it safe enough to just do that length=95 check? Indeed, I believe it would be, but there's actually no way (AFAICT) to check if a string is defined in TI-Basic without erroring out in the negative case. Enabling this option really just tells the program to assume Str3 exists in some form or another.
 
+5. Autonomous
+
+E: Encoding
+V: Version
+Str1
+list.BIN
+
+
+VARIABLES USED
+
+Str1: User input
+Str2: Alphanumeric character set
+Str3: ASCII character set (see "ASCII FIX")
+L1-L6: Temporary data, mostly ECC bytes
+listCW: Codewords. Contains the bytes used to draw the QR code.
+listQR: Options
