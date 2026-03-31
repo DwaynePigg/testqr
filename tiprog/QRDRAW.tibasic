@@ -1,3 +1,5 @@
+If not(V
+int(sqrt(dim(|LCW)+400)/4-4-(dim(|LCW)=26->V
 If V=1
 Then
 	"I=6->{Y0}
@@ -156,6 +158,6 @@ While C>0
 		D+I->I
 	End
 End
-If |LQR(2
+If |LQR(3
 StorePic 1
 DelVar {Y0}

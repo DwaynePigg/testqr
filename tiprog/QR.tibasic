@@ -1,11 +1,9 @@
-SetUpEditor CW,QR
+SetUpEditor CW,BIN,QR
 If 5!=dim(QR
-{1,0,0,0,0->QR
-If QR(5
-Goto U
+{1,1,0,0,0->QR
 0->V
 Lbl 0
-Menu("QR CODE","Alphanumeric",A,"ASCII",B,"Binary",C,"Set version",S,"Options",O,"Redraw",V,"Exit",X
+Menu("QR CODE","Alphanumeric",A,"ASCII",B,"Binary",C,"Set version",S,"Options",O,"Exit",X
 Lbl S
 Input "ver=",V
 int(V->V
@@ -14,216 +12,22 @@ Goto S
 Goto 0
 Lbl O
 "NY
-Menu("OPTIONS","Center:    "+sub(Ans,|1+LQR(1),1),1,"StorePic 1:"+sub(Ans,|1+LQR(2),1),2,"Alt punct: "+sub(Ans,|1+LQR(3),1),3,"ASCII fix: "+sub(Ans,|1+LQR(4),1),4,"Autonomous",5,"Back",0
+Menu("OPTIONS","Center:    "+sub(Ans,|1+LQR(1),1),1,"Safe mode:   "+sub(Ans,|1+LQR(2),1),2,"StorePic 1:"+sub(Ans,|1+LQR(3),1),3,"Alt punct: "+sub(Ans,|1+LQR(4),1),4,"ASCII fix: "+sub(Ans,|1+LQR(5),1),5,"Back",0
 Lbl 1:1:Goto F
 Lbl 2:2:Goto F
 Lbl 3:3:Goto F
-Lbl 4:4
+Lbl 4:4:Goto F
+Lbl 5:5
 Lbl F
 1-|LQR(Ans->|LQR(Ans
 Goto O
-Lbl 5
-Menu("Consult Readme!","Escape",O,"Accept",Z
-Lbl Z
-1->|LQR(5
-Goto X
-Lbl V
-dim(|LCW
-int(sqrt(8Ans+400)/4-4-(Ans=26->V
-Goto D
-Lbl U
-If E
-Then
-dim(|LBIN->L
-Else
-length(Str1->L
-End
-If not(V
-Goto L
-Goto E
-Lbl C
-2->E
-dim(|LBIN->L
-Goto L
-Lbl A:0->E
-Goto M
-Lbl B:1->E
+Lbl A:0:Goto M
+Lbl B:1:Goto M
+Lbl C:2
 Lbl M
+Ans->E
+If E!=2
 Input "msg=",Str1
-length(Str1->L
-Lbl L
-If E
-Then
-	{17,32,53,78,106,134,154,192,230,271,321->L1
-Else
-	{25,47,77,114,154,195,224,279,335,395,468->L1
-End
-If not(V
-min({11,1+sum(Ans<L->V
-V+(V=5)+(V=9->V
-If L<=L1(V
-Goto E
-"Resize
-If V=11
-"Can't "+Ans
-Menu("ERR:msg too long",Ans,R,"Continue",E,"Abort",0
-Lbl R
-0->V
-Goto L
-Lbl E
-ClrHome
-Disp "ver=","Encoding
-Output(1,5,V
-If V=1
-{127,122,154,164,11,68,117->L2
-If V=2
-{216,194,159,111,199,94,95,113,157,193->L2
-If V=3
-{29,196,111,163,112,74,10,105,105,139,132,151,32,134,26->L2
-If V=4 or V=7 or V=11
-{152,185,240,5,111,99,6,220,112,150,69,36,187,22,228,198,121,121,165,174->L2
-If V=5
-{246,51,183,4,136,98,199,152,77,56,206,24,145,40,209,117,233,42,135,68,70,144,146,77,43,94->L2
-If V=6 or V=10
-{239,251,183,113,149,175,199,215,240,220,73,82,173,75,32,67,217,146->L2
-If V=8
-{122,118,169,70,178,237,216,102,115,150,229,73,130,72,61,43,206,1,237,247,127,217,144,117->L2
-If V=9
-{212,246,77,73,195,192,75,98,5,70,103,177,22,217,138,51,181,246,72,25,18,46,228,74,216,195,11,106,130,150->L2
-{19,34,55,80,108,136,156,194,232,274,324
-Ans(V->M
-min({L1(V),L->N
-4->L
-If not(E
-Then
-	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "+sub("$%*+-./:?;',-.!:",1+8|LQR(3),8->Str2
-	{32->CW
-	9+2(V>=10->S
-	prgmQRCW
-	11->S
-	For(X,1,N-1,2
-		inString(Str2,sub(Str1,X,1
-		Ans-1+38not(Ans->C
-		inString(Str2,sub(Str1,X+1,1
-		Ans-1+38not(Ans
-		45C+Ans->N
-		prgmQRCW
-	End
-	If fPart(.5length(Str1
-	Then
-		6->S
-		inString(Str2,sub(Str1,length(Str1),1
-		Ans-1+44not(Ans->N
-		prgmQRCW
-	End
-	min({4,8M-L->S
-	0->N
-	prgmQRCW
-Else
-	{64->CW
-	8+8(V>=10->S
-	prgmQRCW
-	S/8->O
-	If E=1
-	Then
-		|LQR(4
-		If Ans
-		95=length(Str3
-		If not(Ans
-		" !pi#$%&'()*+,-./0123456789:;<\=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}|~->Str3
-		For(X,1,N
-			inString(Str3,sub(Str1,X,1
-			31+Ans+32not(Ans->C
-			int(C/16)+|LCW(O+X->|LCW(O+X
-			256fPart(C/16->|LCW(O+X+1
-		End
-	Else
-		For(X,1,N
-			|LBIN(X->C
-			int(C/16)+|LCW(O+X->|LCW(O+X
-			256fPart(C/16->|LCW(O+X+1
-		End
-	End
-End
-For(X,1,M-dim(|LCW
-	236-219not(fPart(X/2->|LCW(1+dim(|LCW
-End
-Disp "ECC Block  /
-seq(2^N,N,8,1,~1->L3
-If V<=5
-Then
-	Output(3,13,1
-	1->O:dim(|LCW->P:1
-	prgmQRECC
-	augment(|LCW,L1->CW
-Else
-	If V=10
-	Then
-		Output(3,13,4
-		1->O:68->P:1
-		prgmQRECC
-		L1->L4
-		69->O:136->P:2
-		prgmQRECC
-		L1->L5
-		137->O:205->P:3
-		prgmQRECC
-		L1->L6
-		206->O:274->P:4
-		prgmQRECC
-		Disp "Interleaving
-		|LCW(205->U
-		|LCW(274->W
-		seq(not(fPart(N))|LCW(int(N))+(fPart(N)=.25)|LCW(68+int(N))+(fPart(N)=.5)|LCW(136+int(N))+(fPart(N)=.75)|LCW(205+int(N)),N,1,68.75,.25->CW
-		U->|LCW(273
-		W->|LCW(274
-		For(X,1,18
-			L4(X->|LCW(271+4X
-			L5(X->|LCW(272+4X
-			L6(X->|LCW(273+4X
-			L1(X->|LCW(274+4X
-		End
-	Else
-		If V=11
-		Then
-			Output(3,13,4
-			1->O:81->P:1
-			prgmQRECC
-			L1->L4
-			82->O:162->P:2
-			prgmQRECC
-			L1->L5
-			163->O:243->P:3
-			prgmQRECC
-			L1->L6
-			244->O:324->P:4
-			prgmQRECC
-			Disp "Interleaving
-			seq(not(fPart(N))|LCW(int(N))+(fPart(N)=.25)|LCW(81+int(N))+(fPart(N)=.5)|LCW(162+int(N))+(fPart(N)=.75)|LCW(243+int(N)),N,1,81.75,.25->CW
-			For(X,1,20
-				L4(X->|LCW(321+4X
-				L5(X->|LCW(322+4X
-				L6(X->|LCW(323+4X
-				L1(X->|LCW(324+4X
-			End
-		Else
-			Output(3,13,2
-			.5dim(|LCW->H
-			1->O:H->P:1
-			prgmQRECC:L1->L4
-			H+1->O:2H->P:2
-			prgmQRECC
-			Disp "Interleaving
-			seq(not(fPart(N))|LCW(int(N))+2fPart(N)|LCW(H+int(N)),N,1,H+.5,.5->CW
-			P-1->R
-			For(X,1,dim(L1
-				L4(X->|LCW(R+2X
-				L1(X->|LCW(R+2X+1
-			End
-		End
-	End
-End
-0->|LCW(1+dim(|LCW
-Lbl D
+prgmQRCW
 prgmQRDRAW
 Lbl X
