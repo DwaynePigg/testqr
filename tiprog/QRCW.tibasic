@@ -63,7 +63,7 @@ Then
 	End
 	{32->CW
 	9+2(V>=10->S
-	prgmQRCW
+	prgmQRBIT
 	11->S
 	For(X,1,N-1,2
 		inString(Str2,sub(Str1,X,1
@@ -71,22 +71,22 @@ Then
 		inString(Str2,sub(Str1,X+1,1
 		Ans-1+38not(Ans
 		45C+Ans->N
-		prgmQRCW
+		prgmQRBIT
 	End
 	If fPart(.5length(Str1
 	Then
 		6->S
 		inString(Str2,sub(Str1,length(Str1),1
 		Ans-1+44not(Ans->N
-		prgmQRCW
+		prgmQRBIT
 	End
 	min({4,8M-L->S
 	0->N
-	prgmQRCW
+	prgmQRBIT
 Else
 	{64->CW
 	8+8(V>=10->S
-	prgmQRCW
+	prgmQRBIT
 	S/8->O
 	If E=1
 	Then

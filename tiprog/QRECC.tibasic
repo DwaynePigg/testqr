@@ -6,7 +6,7 @@ For(I,O,P
 	.5sum(L3*(1=abs(int(2fPart((L1(1)+B[i])/L3->F
 	DeltaList(cumSum(L1->L1
 	0->L1(1+dim(L1
-	For(J,1,not(F)dim(L2
+	For(J,1,(F!=0)dim(L2
 		|LGFL(F)+|LGFL(L2(J
 		.5sum(L3*(1=abs(int(2fPart((L1(J)+|LGFX(1+Ans-255(Ans>254))[i])/L3->L1(J
 	End

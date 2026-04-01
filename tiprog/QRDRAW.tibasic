@@ -1,21 +1,11 @@
-If not(V
-int(sqrt(dim(|LCW)+400)/4-4-(dim(|LCW)=26->V
-If V=1
-Then
-	"I=6->{Y0}
-Else
-	If V<=6
-	Then
-		"I=6 or abs(S-7-I)<=2 and abs(S-7-J)<=2->{Y0}
-	Else
-		"I=6 or abs(TfPart(I/T)-6)<=2.1 and abs(TfPart(J/T)-6)<=2.1 and abs(I-J)<=S/2-2 or J>=S-11 and I<=5->{Y0}
-	End
-End
+Func
+FnOff 
 AxesOff
 GridOff
-FnOff 
 PlotsOff 
 ClrDraw
+If not(V
+int(sqrt(dim(|LCW)+400)/4-4-(dim(|LCW)=26->V
 If |LQR(1
 Then
 	17+4V->S
@@ -82,6 +72,7 @@ Then
 	Then
 		{S-7->L1
 		{S-7->L2
+		"I=6 or abs(S-7-I)<=2 and abs(S-7-J)<=2->{r1}
 	Else
 		{31892,34236,39577,42195,48118
 		Ans(V-6->B
@@ -99,6 +90,7 @@ Then
 		{6,M,M,M,S-7,S-7->L1
 		{M,6,M,S-7,M,S-7->L2
 		2V+2->T
+		"I=6 or abs(TfPart(I/T)-6)<=2.1 and abs(TfPart(J/T)-6)<=2.1 and abs(I-J)<=S/2-2 or J>=S-11 and I<=5->{r1}
 	End
 	For(X,1,dim(L1
 		G+L1(X->K
@@ -117,6 +109,8 @@ Then
 		End
 		Pxl-On(K,L
 	End
+Else
+	"I=6->{r1}
 End
 S-1->I
 I->C
